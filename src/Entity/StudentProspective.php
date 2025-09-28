@@ -55,12 +55,9 @@ class StudentProspective
     #[ORM\Column(type: 'datetime')]
     private \DateTime $updatedAt;
 
-    #[ORM\OneToMany(targetEntity: Simulation::class, mappedBy: 'student', cascade: ['persist', 'remove'])]
-    private Collection $simulations;
 
     public function __construct()
     {
-        $this->simulations = new ArrayCollection();
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
     }

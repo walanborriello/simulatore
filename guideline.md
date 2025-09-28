@@ -197,11 +197,12 @@ git push -u origin fase-1-repo-setup
 -   Pagine `newStudent`, `editStudent`, `showStudent` con integrazione
     simulatore e storico simulazioni (salvataggio con token in
     sessione + log cambi token).
--   La form deve contenere `nome`, `cognome`, `data di registrazione`, `email` con verifica validazione email, `codice fiscale` con validazione validità e deve essere univoco, `ateneo di provenienza`, `corso di studio di interesse`
+-   La form deve contenere `nome`, `cognome`, `data di registrazione`, `email` con verifica validazione email, `codice fiscale` con validazione validità e deve essere univoco, `ateneo di provenienza`, `corso di studio di interesse`, `telefono` e questi devono essere tutti campi obbligatori.
+- Pulsante elimina studente nella tabella in home nella colonna azioni e nel visualizza.
 
 *Checklist Fase 4:* - \[ \] Blocco accesso se manca `user_token`\
-- \[ \] CRUD studenti + associazione simulazioni (che verrà implementata in fase 5)\
-- \[ \] Log cambio token su simulazioni (che verrà implementata in fase 5)
+- \[ \] CRUD studenti + associazione simulazioni (che verrà implementata in fase 5 quindi non implementare nulla e se lo hai fatto elimina)\
+- \[ \] Log cambio token su simulazioni (che verrà implementata in fase 5 quindi non implementare nulla e se lo hai fatto elimina)
 
 ------------------------------------------------------------------------
 
@@ -285,8 +286,8 @@ Output: `detail`, `summary`, `leftovers`, `simulationId`.
 
 -   Palette: gradiente `linear-gradient(0deg, #379975 40px, #FFF 0%)`,
     titoli `#E57552`, testo `#444444`, footer `#444444` (testo bianco).\
--   **Logo:** `public/logo.png` (dimensione originale, clic → `/`).\
--   **Favicon:** `public/favicon.ico` con
+-   **Logo:** `logo.png` (dimensione originale, clic → `/`).\
+-   **Favicon:** `favicon.ico` con
     `<link rel="icon" type="image/x-icon" href="/favicon.ico">`.\
 -   Responsive: hamburger menu, transizioni scroll.\
 -   Errori form: bordo rosso + messaggio sotto campo + scroll al primo
