@@ -1,0 +1,24 @@
+# --- Symfony / PHP ---
+/vendor/
+/var/
+/node_modules/
+/public/build/
+/public/*.map
+
+# --- Env & secrets ---
+.env
+.env.*
+!.env.dist
+
+# --- Docker (SOLO LOCALE) ---
+/docker/
+docker-compose*.yml
+docker-compose*.yaml
+docker/**
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
