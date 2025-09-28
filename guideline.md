@@ -197,10 +197,11 @@ git push -u origin fase-1-repo-setup
 -   Pagine `newStudent`, `editStudent`, `showStudent` con integrazione
     simulatore e storico simulazioni (salvataggio con token in
     sessione + log cambi token).
+-   La form deve contenere `nome`, `cognome`, `data di registrazione`, `email` con verifica validazione email, `codice fiscale` con validazione validità e deve essere univoco, `ateneo di provenienza`, `corso di studio di interesse`
 
 *Checklist Fase 4:* - \[ \] Blocco accesso se manca `user_token`\
-- \[ \] CRUD studenti + associazione simulazioni\
-- \[ \] Log cambio token su simulazioni
+- \[ \] CRUD studenti + associazione simulazioni (che verrà implementata in fase 5)\
+- \[ \] Log cambio token su simulazioni (che verrà implementata in fase 5)
 
 ------------------------------------------------------------------------
 

@@ -2,9 +2,11 @@
 
 namespace App\Entity;
 
+use App\Validator\CodiceFiscale as CodiceFiscaleConstraint;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'students_prospective')]
@@ -16,13 +18,30 @@ class StudentProspective
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank]
     private string $firstName;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank]
     private string $lastName;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Email]
     private string $email;
+
+    #[ORM\Column(type: 'string', length: 16, unique: true)]
+    #[Assert\NotBlank]
+    #[CodiceFiscaleConstraint]
+    private string $codiceFiscale;
+
+    #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank]
+    private string $ateneoProvenienza;
+
+    #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank]
+    private string $corsoStudioInteresse;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $phone = null;
@@ -81,6 +100,39 @@ class StudentProspective
     public function setEmail(string $email): self
     {
         $this->email = $email;
+        return $this;
+    }
+
+    public function getCodiceFiscale(): string
+    {
+        return $this->codiceFiscale;
+    }
+
+    public function setCodiceFiscale(string $codiceFiscale): self
+    {
+        $this->codiceFiscale = $codiceFiscale;
+        return $this;
+    }
+
+    public function getAteneoProvenienza(): string
+    {
+        return $this->ateneoProvenienza;
+    }
+
+    public function setAteneoProvenienza(string $ateneoProvenienza): self
+    {
+        $this->ateneoProvenienza = $ateneoProvenienza;
+        return $this;
+    }
+
+    public function getCorsoStudioInteresse(): string
+    {
+        return $this->corsoStudioInteresse;
+    }
+
+    public function setCorsoStudioInteresse(string $corsoStudioInteresse): self
+    {
+        $this->corsoStudioInteresse = $corsoStudioInteresse;
         return $this;
     }
 

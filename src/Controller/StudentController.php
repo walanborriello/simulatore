@@ -59,6 +59,9 @@ class StudentController extends AbstractController
             $student->setFirstName($request->request->get('firstName', ''));
             $student->setLastName($request->request->get('lastName', ''));
             $student->setEmail($request->request->get('email', ''));
+            $student->setCodiceFiscale($request->request->get('codiceFiscale', ''));
+            $student->setAteneoProvenienza($request->request->get('ateneoProvenienza', ''));
+            $student->setCorsoStudioInteresse($request->request->get('corsoStudioInteresse', ''));
             $student->setPhone($request->request->get('phone', ''));
             $student->setNotes($request->request->get('notes', ''));
             $student->setUpdatedAt(new \DateTime());
@@ -110,6 +113,9 @@ class StudentController extends AbstractController
             $student->setFirstName($request->request->get('firstName', ''));
             $student->setLastName($request->request->get('lastName', ''));
             $student->setEmail($request->request->get('email', ''));
+            $student->setCodiceFiscale($request->request->get('codiceFiscale', ''));
+            $student->setAteneoProvenienza($request->request->get('ateneoProvenienza', ''));
+            $student->setCorsoStudioInteresse($request->request->get('corsoStudioInteresse', ''));
             $student->setPhone($request->request->get('phone', ''));
             $student->setNotes($request->request->get('notes', ''));
             $student->setUpdatedAt(new \DateTime());

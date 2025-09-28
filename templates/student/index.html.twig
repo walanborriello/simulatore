@@ -243,7 +243,9 @@
                         <tr>
                             <th>Nome</th>
                             <th>Email</th>
-                            <th>Telefono</th>
+                            <th>Codice Fiscale</th>
+                            <th>Ateneo</th>
+                            <th>Corso Interesse</th>
                             <th>Data Registrazione</th>
                             <th>Azioni</th>
                         </tr>
@@ -257,7 +259,9 @@
                             <td>
                                 <div class="student-email">{{ student.email }}</div>
                             </td>
-                            <td>{{ student.phone ?? '-' }}</td>
+                            <td>{{ student.codiceFiscale }}</td>
+                            <td>{{ student.ateneoProvenienza }}</td>
+                            <td>{{ student.corsoStudioInteresse }}</td>
                             <td>{{ student.createdAt|date('d/m/Y H:i') }}</td>
                             <td>
                                 <div class="actions">
@@ -268,7 +272,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
                                 Nessuno studente trovato. <a href="/student/new">Crea il primo studente</a>
                             </td>
                         </tr>
