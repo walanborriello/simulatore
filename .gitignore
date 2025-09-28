@@ -4,15 +4,6 @@
 /node_modules/
 /public/build/
 /public/*.map
-composer.lock
-symfony.lock
-
-# --- Cache e build files ---
-/var/cache/
-/var/log/
-/var/sessions/
-*.cache
-*.tmp
 
 # --- Env & secrets ---
 .env
@@ -24,7 +15,6 @@ symfony.lock
 docker-compose*.yml
 docker-compose*.yaml
 docker/**
-compose.override.yaml
 
 # --- IDE / OS ---
 .idea/

@@ -4,7 +4,7 @@
 
 **Progetto:** Simulatore CFU UniMarconi\
 **Dominio host locale:** `127.0.0.1 simulatore.local`\
-**Stack:** PHP 8.4 + Symfony 7.3, MySQL 8, Redis (opzionale),
+**Stack:** PHP 8.4 + **IMPORTANTE** Symfony 7.3, MySQL 8, Redis (opzionale),
 HTML/CSS/JS, jQuery/Alpine, Vite
 
 ------------------------------------------------------------------------
@@ -175,7 +175,7 @@ git push -u origin fase-1-repo-setup
 
 *Checklist Fase 2:* - \[ \] `docker-compose up -d --build` ok\
 - \[ \] DB importato da `schema.sql`\
-- \[ \] App raggiungibile **SOLO** su `http://simulatore.local`
+- \[ \] App raggiungibile **SOLO** su `http://simulatore.local` e **NON** su `http://localhost` 
 
 ------------------------------------------------------------------------
 
