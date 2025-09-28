@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\StudentProspective;
 use App\Entity\Simulation;
+use App\Entity\SimulationLogToken;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -122,6 +123,32 @@ class StudentController extends AbstractController
         return $this->render('student/edit.html.twig', [
             'student' => $student
         ]);
+    }
+    
+    #[Route('/student/{id}/create-test-simulation', name: 'app_student_create_test_simulation', requirements: ['id' => '\d+'])]
+    public function createTestSimulation(int $id, EntityManagerInterface $em, SessionInterface $session): Response
+    {
+        $this->checkToken($session);
+        
+        $student = $em->getRepository(StudentProspective::class)->find($id);
+        
+        if (!$student) {
+            throw $this->createNotFoundException('Studente non trovato');
+        }
+        
+        // Crea una simulazione di test
+        $simulation = new Simulation();
+        $simulation->setStudent($student);
+        $simulation->setCdl('Test CDL');
+        $simulation->setInputData(['test' => 'data']);
+        $simulation->setResultData(['result' => 'test']);
+        $simulation->setUserToken($session->get('user_token'));
+        
+        $em->persist($simulation);
+        $em->flush();
+        
+        $session->set('success_message', 'Simulazione di test creata con successo');
+        return $this->redirectToRoute('app_student_show', ['id' => $student->getId()]);
     }
     
     private function checkToken(SessionInterface $session): void
