@@ -4,6 +4,15 @@
 /node_modules/
 /public/build/
 /public/*.map
+composer.lock
+symfony.lock
+
+# --- Cache e build files ---
+/var/cache/
+/var/log/
+/var/sessions/
+*.cache
+*.tmp
 
 # --- Env & secrets ---
 .env
@@ -15,6 +24,7 @@
 docker-compose*.yml
 docker-compose*.yaml
 docker/**
+compose.override.yaml
 
 # --- IDE / OS ---
 .idea/
@@ -22,3 +32,20 @@ docker/**
 *.log
 .DS_Store
 Thumbs.db
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-bundle ###
