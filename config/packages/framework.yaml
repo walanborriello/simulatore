@@ -1,15 +1,31 @@
-# see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
     secret: '%env(APP_SECRET)%'
+    #csrf_protection: true
+    http_method_override: false
 
-    # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    # Enables session support.
+    session:
+        handler_id: null
+        cookie_secure: auto
+        cookie_samesite: lax
+        storage_factory_id: session.storage.factory.native
 
     #esi: true
+    #ssr: true
     #fragments: true
+    php_errors:
+        log: true
 
-when@test:
-    framework:
-        test: true
-        session:
-            storage_factory_id: session.storage.factory.mock_file
+    messenger:
+        # Uncomment this line to enable use of the default bus.
+        # default_bus: messenger.bus.default
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            # failed: 'doctrine://default?queue_name=failed'
+            # sync: 'sync://'
+
+        routing:
+            # Route your messages to the transports
+            # 'App\Message\YourMessage': async

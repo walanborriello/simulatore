@@ -1,0 +1,25 @@
+# This file is the main configuration file for the Symfony framework.
+# It's where you configure how services are loaded and how the application behaves.
+# Read the documentation: https://symfony.com/doc/current/best_practices.html#container-and-services
+
+parameters:
+    locale: 'it'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+    # controllers are imported separately to make sure they're public
+    # and can be autowired as action arguments
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']

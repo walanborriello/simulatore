@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Simulatore CFU UniMarconi - FASE 3{% endblock %}
+
+{% block body %}
+<div class="container">
+    <header>
+        <img src="{{ asset('logo.png') }}" alt="Logo UniMarconi" class="logo">
+        <h1>🎉 Fase 3 Completata!</h1>
+        <h2>Simulatore CFU UniMarconi</h2>
+    </header>
+    
+    <div class="status-grid">
+        <div class="status-card">
+            <h3>✅ Ambiente Docker</h3>
+            <p class="success">Container avviati con successo</p>
+            <p>• MySQL 8.0 Database</p>
+            <p>• PHP 8.4-FPM</p>
+            <p>• Nginx Web Server</p>
+            <p>• Redis Cache</p>
+        </div>
+        
+        <div class="status-card">
+            <h3>✅ Database</h3>
+            <p class="success">Configurazione completata</p>
+            <p>• Database: simulatore</p>
+            <p>• Utente: unimarconi</p>
+            <p>• Tabelle importate</p>
+            <p><a href="http://localhost:8080" target="_blank">phpMyAdmin →</a></p>
+        </div>
+        
+        <div class="status-card">
+            <h3>✅ Web Server</h3>
+            <p class="success">Nginx operativo</p>
+            <p>• Dominio: simulatore.local</p>
+            <p>• Porta: 80</p>
+            <p>• SSL: Configurato</p>
+            <p>• Gzip: Abilitato</p>
+        </div>
+        
+        <div class="status-card">
+            <h3>✅ Stile e Design</h3>
+            <p class="success">Palette applicata</p>
+            <p>• Gradiente: #379975</p>
+            <p>• Titoli: #E57552</p>
+            <p>• Testo: #444444</p>
+            <p>• Footer: #444444</p>
+        </div>
+    </div>
+    
+    <div class="phase-info">
+        <h3>🚀 Fase 3 - Index Temporanea</h3>
+        <p><strong>Obiettivo:</strong> Piccola pagina di benvenuto per verificare pipeline build e asset</p>
+        <p><strong>Status:</strong> <span class="success">Completata</span></p>
+        <p><strong>Prossimi passi:</strong> Fase 4 - Pagina /simulatore + algoritmo + UI</p>
+        <p class="timestamp">Timestamp: {{ "now"|date("Y-m-d H:i:s") }}</p>
+    </div>
+</div>
+{% endblock %}
