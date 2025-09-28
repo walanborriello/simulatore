@@ -319,6 +319,7 @@ Output: `detail`, `summary`, `leftovers`, `simulationId`.
 
 ## 18) Ottimizzazione Performance (CRITICO)
 
+-  **IMPORTANTE** Per il simulatore carica le tabelle in diversi array cosi evitiamo chiamate AJAX lente.
 -   Lazy loading riconoscibili via AJAX; cache Redis opzionale.\
 -   Indici: `zcfu_riconoscibile(CDL)`,
     `zcfu_riconoscibile(riconoscibile)`, `zcfu_dis(ssd)`.\
