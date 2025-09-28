@@ -3,8 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\StudentProspective;
-use App\Entity\Simulation;
-use App\Entity\SimulationLogToken;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

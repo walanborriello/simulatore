@@ -9,6 +9,15 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class IndexController extends AbstractController
 {
+    #[Route('/', name: 'app_index')]
+    public function index(SessionInterface $session): Response
+    {
+        if (!$session->has('user_token')) {
+            return $this->redirectToRoute('app_login');
+        }
+        return $this->redirectToRoute('app_student_index');
+    }
+
     #[Route('/welcome', name: 'app_welcome')]
     public function welcome(): Response
     {
