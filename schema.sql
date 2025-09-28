@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS `zcfu_offerta` (
 /*!40000 ALTER TABLE `zcfu_offerta` DISABLE KEYS */;
 INSERT INTO `zcfu_offerta` (`OFF_ID`, `ORI_ID`, `DIS_ID`, `rosa`, `maxCFU`, `TAF`, `CFU`, `ANNO`, `AA`, `CDL`) VALUES
 	(1, 1, 1, 0, 0, 'A', 12, 1, '2025/2026', 'L1'),
-	(2, 1, 1, 2, 1, 12, 'A', 12, 1, '2025/2026', 'L1'),
+	(2, 1, 1, 2, 1, 'A', 12, 1, '2025/2026', 'L1'),
 	(3, 1, 3, 1, 12, 'A', 12, 1, '2025/2026', 'L1'),
 	(4, 1, 4, 1, 12, 'A', 6, 1, '2025/2026', 'L1'),
 	(5, 1, 5, 1, 12, 'A', 6, 1, '2025/2026', 'L1'),
