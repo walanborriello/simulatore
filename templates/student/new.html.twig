@@ -458,7 +458,8 @@
                 try {
                     const response = await fetch(`/api/ssd/${cdl}`);
                     const ssdData = await response.json();
-                    ssdOptions = ssdData;
+                    ssdOptions = ssdData || [];
+                    console.log(`SSD caricati per ${cdl}:`, ssdOptions.length);
                 } catch (error) {
                     console.error('Errore nel caricamento SSD:', error);
                     ssdOptions = [];
@@ -497,6 +498,11 @@
                     disciplineRows.parentNode.insertBefore(messageDiv, disciplineRows);
                 }
                 messageDiv.style.display = 'block';
+                
+                // Nasconde le righe delle discipline e i pulsanti
+                document.getElementById('discipline-rows').style.display = 'none';
+                document.getElementById('add-discipline').style.display = 'none';
+                document.getElementById('simulate-btn').style.display = 'none';
             }
             
             // Nasconde messaggio nessun SSD
@@ -505,6 +511,11 @@
                 if (messageDiv) {
                     messageDiv.style.display = 'none';
                 }
+                
+                // Mostra le righe delle discipline e i pulsanti
+                document.getElementById('discipline-rows').style.display = 'block';
+                document.getElementById('add-discipline').style.display = 'block';
+                document.getElementById('simulate-btn').style.display = 'block';
             }
             
             // Aggiunge riga disciplina
