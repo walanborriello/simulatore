@@ -166,28 +166,54 @@
             border-color: #dc3545 !important;
         }
         
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        
-        .loading-content {
-            text-align: center;
-        }
-        
-        .loading-logo {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-        }
+                .loading-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(255, 255, 255, 0.95);
+                    display: none;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                }
+                
+                .loading-content {
+                    text-align: center;
+                }
+                
+                .loading-spinner {
+                    width: 80px;
+                    height: 80px;
+                    border: 3px solid #f3f3f3;
+                    border-top: 3px solid #E57552;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 20px;
+                }
+                
+                .loading-logo {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    object-fit: cover;
+                }
+                
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                .loading-text {
+                    color: #E57552;
+                    font-size: 16px;
+                    font-weight: 500;
+                }
         
         .results-container {
             margin-top: 30px;
@@ -390,7 +416,10 @@
         <!-- Loading Overlay -->
         <div class="loading-overlay" id="loading-overlay">
             <div class="loading-content">
-                <img src="/logo.png" alt="Loading" class="loading-logo">
+                <div class="loading-spinner">
+                    <img src="/logo.png" alt="Loading" class="loading-logo">
+                </div>
+                <div class="loading-text">Caricamento in corso...</div>
             </div>
         </div>
         
@@ -398,12 +427,12 @@
             // Variabili globali
             let disciplineCount = 0;
             let currentCdl = '';
-            let allData = null; // Dati precaricati
+            let ssdOptions = [];
             let currentResults = null;
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
-                loadAllData();
+                loadCdlOptions();
                 addDisciplineRow(); // Minimo 1 riga
                 
                 // Event listeners
@@ -412,16 +441,14 @@
                 document.getElementById('simulate-btn').addEventListener('click', simulate);
             });
             
-            // Carica TUTTI i dati preventivamente
-            async function loadAllData() {
-                showLoading();
+            // Carica opzioni CDL
+            async function loadCdlOptions() {
                 try {
-                    const response = await fetch('/api/load-all-data');
-                    allData = await response.json();
+                    const response = await fetch('/api/cdl');
+                    const cdlData = await response.json();
                     
-                    // Popola CDL
                     const select = document.getElementById('simulator-cdl');
-                    allData.cdl.forEach(cdl => {
+                    cdlData.forEach(cdl => {
                         const option = document.createElement('option');
                         option.value = cdl.id;
                         option.textContent = cdl.text;
@@ -432,18 +459,17 @@
                     $('#simulator-cdl').select2({
                         placeholder: 'Seleziona corso di laurea...',
                         allowClear: true,
-                        width: '100%'
+                        width: '100%',
+                        minimumResultsForSearch: 0 // Mostra sempre la search box
                     });
                     
                 } catch (error) {
-                    console.error('Errore nel caricamento dati:', error);
-                } finally {
-                    hideLoading();
+                    console.error('Errore nel caricamento CDL:', error);
                 }
             }
             
             // Gestisce cambio CDL
-            function handleCdlChange() {
+            async function handleCdlChange() {
                 const cdlSelect = document.getElementById('simulator-cdl');
                 const disciplineSection = document.getElementById('discipline-section');
                 
@@ -451,19 +477,23 @@
                 
                 if (currentCdl) {
                     disciplineSection.style.display = 'block';
+                    showLoading();
                     
-                    // Usa dati precaricati (nessun loading necessario)
-                    const ssdOptions = allData.ssd[currentCdl] || [];
-                    
-                    if (ssdOptions.length === 0) {
-                        showNoSsdMessage();
-                    } else {
-                        hideNoSsdMessage();
-                        populateAllSsdSelects(ssdOptions);
+                    try {
+                        await loadSsdOptions(currentCdl);
+                        
+                        if (ssdOptions.length === 0) {
+                            showNoSsdMessage();
+                        } else {
+                            hideNoSsdMessage();
+                            populateAllSsdSelects();
+                        }
+                        
+                        // Scroll lento verso la sezione discipline
+                        disciplineSection.scrollIntoView({ behavior: 'smooth' });
+                    } finally {
+                        hideLoading();
                     }
-                    
-                    // Scroll lento verso la sezione discipline
-                    disciplineSection.scrollIntoView({ behavior: 'smooth' });
                 } else {
                     disciplineSection.style.display = 'none';
                 }
@@ -471,16 +501,29 @@
                 clearError('cdl-error');
             }
             
+            // Carica opzioni SSD per CDL
+            async function loadSsdOptions(cdl) {
+                try {
+                    const response = await fetch(`/api/ssd/${cdl}`);
+                    const ssdData = await response.json();
+                    ssdOptions = ssdData || [];
+                    console.log(`SSD caricati per ${cdl}:`, ssdOptions.length);
+                } catch (error) {
+                    console.error('Errore nel caricamento SSD:', error);
+                    ssdOptions = [];
+                }
+            }
+            
             // Popola tutte le select SSD
-            function populateAllSsdSelects(ssdOptions) {
+            function populateAllSsdSelects() {
                 const ssdSelects = document.querySelectorAll('.ssd-select');
                 ssdSelects.forEach(select => {
-                    populateSsdSelect(select, ssdOptions);
+                    populateSsdSelect(select);
                 });
             }
             
             // Popola una select SSD
-            function populateSsdSelect(select, ssdOptions) {
+            function populateSsdSelect(select) {
                 select.innerHTML = '<option value="">Seleziona SSD...</option>';
                 ssdOptions.forEach(ssd => {
                     const option = document.createElement('option');
@@ -493,7 +536,8 @@
                 $(select).select2({
                     placeholder: 'Seleziona SSD...',
                     allowClear: true,
-                    width: '100%'
+                    width: '100%',
+                    minimumResultsForSearch: 0 // Mostra sempre la search box
                 });
             }
             
@@ -565,9 +609,9 @@
                 container.appendChild(row);
                 
                         // Popola la select SSD se ci sono opzioni disponibili
-                        if (allData && allData.ssd[currentCdl] && allData.ssd[currentCdl].length > 0) {
+                        if (ssdOptions.length > 0) {
                             const select = row.querySelector('.ssd-select');
-                            populateSsdSelect(select, allData.ssd[currentCdl]);
+                            populateSsdSelect(select);
                         }
                 
                 // Event listeners per validazione

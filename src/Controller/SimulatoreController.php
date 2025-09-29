@@ -107,46 +107,6 @@ class SimulatoreController extends AbstractController
         return new JsonResponse($ssdList);
     }
 
-    #[Route('/api/load-all-data', name: 'app_load_all_data', methods: ['GET'])]
-    public function loadAllData(): JsonResponse
-    {
-        // Caricamento preventivo di tutti i dati per performance
-        $data = [];
-        
-        // Carica tutti i CDL
-        $cdlRepo = $this->em->getRepository(\App\Entity\ZcfuCdl::class);
-        $cdlData = $cdlRepo->createQueryBuilder('c')
-            ->select('c.cdl, c.orient')
-            ->getQuery()
-            ->getArrayResult();
-
-        $data['cdl'] = [];
-        foreach ($cdlData as $cdl) {
-            $data['cdl'][] = [
-                'id' => $cdl['cdl'],
-                'text' => $cdl['cdl'] . ' - ' . $cdl['orient']
-            ];
-        }
-
-        // Carica tutti i riconoscibili per ogni CDL
-        $riconoscibiliRepo = $this->em->getRepository(\App\Entity\ZcfuRiconoscibile::class);
-        $riconoscibiliData = $riconoscibiliRepo->createQueryBuilder('r')
-            ->getQuery()
-            ->getArrayResult();
-
-        $data['ssd'] = [];
-        foreach ($riconoscibiliData as $ric) {
-            if (!isset($data['ssd'][$ric['cdl']])) {
-                $data['ssd'][$ric['cdl']] = [];
-            }
-            $data['ssd'][$ric['cdl']][] = [
-                'id' => $ric['riconoscibile'],
-                'text' => $ric['riconoscibile']
-            ];
-        }
-
-        return new JsonResponse($data);
-    }
 
     private function validateInput(array $data): array
     {
