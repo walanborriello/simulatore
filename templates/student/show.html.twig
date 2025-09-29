@@ -291,25 +291,13 @@
                 }
                 
                 .loading-spinner {
-                    width: 100px;
-                    height: 100px;
+                    width: 60px;
+                    height: 60px;
                     border: 4px solid #f3f3f3;
                     border-top: 4px solid #E57552;
                     border-radius: 50%;
                     animation: spin 1s linear infinite;
                     margin: 0 auto 20px;
-                    position: relative;
-                }
-                
-                .loading-logo {
-                    width: 60px;
-                    height: 60px;
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    object-fit: contain;
-                    z-index: 10;
                 }
                 
                 @keyframes spin {
@@ -324,12 +312,15 @@
                 }
                 
                 /* Forza visibilità search box Select2 */
-                .select2-search-always .select2-search {
+                .select2-search {
                     display: block !important;
                 }
                 
-                .select2-search {
-                    display: block !important;
+                .select2-search__field {
+                    width: 100% !important;
+                    padding: 8px !important;
+                    border: 1px solid #ddd !important;
+                    border-radius: 4px !important;
                 }
         
         .results-container {
@@ -605,9 +596,7 @@
         <!-- Loading Overlay -->
         <div class="loading-overlay" id="loading-overlay">
             <div class="loading-content">
-                <div class="loading-spinner">
-                    <img src="/logo.png" alt="Loading" class="loading-logo">
-                </div>
+                <div class="loading-spinner"></div>
                 <div class="loading-text">Caricamento in corso...</div>
             </div>
         </div>
@@ -622,16 +611,27 @@
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
-                loadCdlOptions();
-                addDisciplineRow(); // Riga 1
-                addDisciplineRow(); // Riga 2
-                addDisciplineRow(); // Riga 3 - Minimo 3 righe
+                // Aspetta che jQuery sia caricato
+                function waitForJQueryAndInit() {
+                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                        console.log('✅ jQuery e Select2 disponibili, inizializzo...');
+                        loadCdlOptions();
+                        addDisciplineRow(); // Riga 1
+                        addDisciplineRow(); // Riga 2
+                        addDisciplineRow(); // Riga 3 - Solo per grafica
+                        
+                        // Event listeners
+                        document.getElementById('toggle-simulator').addEventListener('click', toggleSimulator);
+                        document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
+                        document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
+                        document.getElementById('simulate-btn').addEventListener('click', simulate);
+                    } else {
+                        console.log('⏳ Aspetto jQuery/Select2...');
+                        setTimeout(waitForJQueryAndInit, 100);
+                    }
+                }
                 
-                // Event listeners
-                document.getElementById('toggle-simulator').addEventListener('click', toggleSimulator);
-                document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
-                document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
-                document.getElementById('simulate-btn').addEventListener('click', simulate);
+                waitForJQueryAndInit();
             });
             
             // Toggle simulatore
@@ -663,14 +663,48 @@
                         select.appendChild(option);
                     });
                     
-                    // Inizializza Select2 per CDL
-                    $('#simulator-cdl').select2({
-                        placeholder: 'Seleziona corso di laurea...',
-                        allowClear: true,
-                        width: '100%',
-                        minimumResultsForSearch: -1, // Forza sempre la search box
-                        dropdownCssClass: 'select2-search-always'
-                    });
+                    // Distruggi Select2 esistente e ricostruisci
+                    console.log('jQuery disponibile:', typeof $ !== 'undefined');
+                    console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
+                    
+                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                        try {
+                            $('#simulator-cdl').select2('destroy');
+                        } catch(e) {
+                            console.log('Select2 non era inizializzato, procedo con creazione');
+                        }
+                        
+                        // Inizializza Select2 con configurazione forzata
+                        $('#simulator-cdl').select2({
+                            placeholder: 'Seleziona corso di laurea...',
+                            allowClear: true,
+                            width: '100%',
+                            minimumResultsForSearch: 1, // Mostra search box sempre
+                            language: {
+                                noResults: function() {
+                                    return "Nessun risultato trovato";
+                                },
+                                searching: function() {
+                                    return "Ricerca in corso...";
+                                }
+                            }
+                        });
+                        
+                        // Forza la creazione della search box
+                        setTimeout(function() {
+                            const searchContainer = $('.select2-search');
+                            if (searchContainer.length === 0) {
+                                console.log('🔧 Forzando creazione search box...');
+                                $('.select2-dropdown').prepend('<div class="select2-search select2-search--dropdown"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" aria-autocomplete="list" placeholder="Cerca..."></div>');
+                            }
+                        }, 100);
+                        
+                        console.log('✅ Select2 ricostruito per CDL con search box');
+                    } else {
+                        console.error('❌ jQuery o Select2 non caricati');
+                        console.log('jQuery:', typeof $);
+                        console.log('Select2:', typeof $ !== 'undefined' ? $.fn.select2 : 'jQuery non disponibile');
+                    }
                     
                 } catch (error) {
                     console.error('Errore nel caricamento CDL:', error);
@@ -741,14 +775,52 @@
                     select.appendChild(option);
                 });
                 
-                // Inizializza Select2 per questa select
-                $(select).select2({
-                    placeholder: 'Seleziona SSD...',
-                    allowClear: true,
-                    width: '100%',
-                    minimumResultsForSearch: -1, // Forza sempre la search box
-                    dropdownCssClass: 'select2-search-always'
-                });
+                // Distruggi Select2 esistente e ricostruisci
+                console.log('Inizializzando Select2 per SSD...');
+                console.log('jQuery disponibile per SSD:', typeof $ !== 'undefined');
+                console.log('Select2 disponibile per SSD:', typeof $ !== 'undefined' && $.fn.select2);
+                
+                // Aspetta che jQuery sia disponibile
+                function initSelect2SSD() {
+                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                        try {
+                            $(select).select2('destroy');
+                        } catch(e) {
+                            console.log('Select2 SSD non era inizializzato, procedo con creazione');
+                        }
+                        
+                        $(select).select2({
+                            placeholder: 'Seleziona SSD...',
+                            allowClear: true,
+                            width: '100%',
+                            minimumResultsForSearch: 1, // Mostra search box sempre
+                            language: {
+                                noResults: function() {
+                                    return "Nessun risultato trovato";
+                                },
+                                searching: function() {
+                                    return "Ricerca in corso...";
+                                }
+                            }
+                        });
+                        
+                        // Forza la creazione della search box per SSD
+                        setTimeout(function() {
+                            const searchContainer = $('.select2-search');
+                            if (searchContainer.length === 0) {
+                                console.log('🔧 Forzando creazione search box per SSD...');
+                                $('.select2-dropdown').prepend('<div class="select2-search select2-search--dropdown"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" aria-autocomplete="list" placeholder="Cerca SSD..."></div>');
+                            }
+                        }, 100);
+                        
+                        console.log('✅ Select2 ricostruito per SSD con search box');
+                    } else {
+                        console.log('⏳ jQuery/Select2 non ancora caricati, riprovo tra 100ms...');
+                        setTimeout(initSelect2SSD, 100);
+                    }
+                }
+                
+                initSelect2SSD();
             }
             
             // Mostra messaggio nessun SSD disponibile
@@ -847,11 +919,12 @@
             // Rimuove riga disciplina
             window.removeDisciplineRow = function(id) {
                 const row = document.getElementById(`discipline-row-${id}`);
-                if (row && disciplineCount > 3) { // Mantieni minimo 3 righe
+                if (row && disciplineCount > 1) { // Posso eliminare se ce ne sono più di 1
                     row.remove();
-                } else if (row && disciplineCount <= 3) {
-                    // Mostra errore se si prova a eliminare una delle prime 3 righe
-                    alert('⚠️ Deve essere presente almeno tre discipline per procedere con la simulazione.');
+                    disciplineCount--; // Decrementa il contatore
+                } else if (row && disciplineCount === 1) {
+                    // Mostra errore se si prova a eliminare l'ultima riga
+                    alert('⚠️ Deve essere presente almeno una disciplina per procedere con la simulazione.');
                 }
             }
             
