@@ -18,57 +18,6 @@
             align-items: center;
         }
         
-        .btn-primary {
-            background: #379975;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-align: center;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-primary.btn-small {
-            width: 40px;
-            height: 44px;
-            padding: 0;
-        }
-        
-        .btn-primary:hover {
-            background: #2d7a5f;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 16px;
-            width: 40px;
-            height: 44px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-danger:hover {
-            background: #c82333;
-            text-decoration: none;
-            cursor: pointer;
-        }
         
         .filters-container {
             background: #f8f9fa;
@@ -260,48 +209,6 @@
             color: #666;
         }
         
-        .actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .btn-small {
-            font-size: 16px;
-            border-radius: 6px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-align: center;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-secondary.btn-small {
-            width: 40px;
-            height: 44px;
-            padding: 0;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-            text-decoration: none;
-            cursor: pointer;
-        }
         
         .empty-state {
             text-align: center;
@@ -394,6 +301,8 @@
                 margin: 0 -15px;
             }
         }
+        
+        
 {% endblock %}
 
 {% block content %}
@@ -459,7 +368,7 @@
                         <div class="actions">
                             <a href="/student/{{ student.id }}" class="btn btn-primary btn-small" title="Visualizza">👁️</a>
                             <a href="/student/{{ student.id }}/edit" class="btn btn-secondary btn-small" title="Modifica">✏️</a>
-                            <a href="/student/{{ student.id }}/delete" class="btn btn-danger btn-small" title="Elimina" onclick="return confirm('Sei sicuro di voler eliminare questo studente?')">🗑️</a>
+                            <button class="btn btn-danger btn-small" title="Elimina" onclick="showDeleteModal({{ student.id }}, '{{ student.fullName|e('js') }}', '{{ student.email|e('js') }}')">🗑️</button>
                         </div>
                     </td>
                 </tr>
@@ -476,6 +385,28 @@
             </tbody>
                 </table>
                 </div>
+                
+        <!-- Modale Conferma Eliminazione Studente -->
+        <div class="modal-overlay" id="delete-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🗑️ Conferma Eliminazione</h3>
+                    <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Sei sicuro di voler eliminare questo studente?</p>
+                    <div class="modal-info">
+                        <strong>Nome:</strong> <span id="modal-student-name"></span><br>
+                        <strong>Email:</strong> <span id="modal-student-email"></span>
+                    </div>
+                    <p class="modal-warning">⚠️ Questa azione non può essere annullata e eliminerà anche tutte le simulazioni associate.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()">Annulla</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteStudent()">Elimina</button>
+                </div>
+            </div>
+        </div>
                 
         <script>
             // Controlla se ci sono filtri attivi
@@ -519,6 +450,42 @@
                 } else {
                     filtersContainer.style.display = 'none';
                     button.textContent = 'Filtri';
+                }
+            });
+            
+            // Variabili per il modale di eliminazione
+            let studentToDelete = null;
+            
+            // Funzioni per il modale di eliminazione
+            function showDeleteModal(studentId, studentName, studentEmail) {
+                studentToDelete = studentId;
+                
+                document.getElementById('modal-student-name').textContent = studentName;
+                document.getElementById('modal-student-email').textContent = studentEmail;
+                
+                document.getElementById('delete-modal').style.display = 'flex';
+            }
+            
+            function closeDeleteModal() {
+                document.getElementById('delete-modal').style.display = 'none';
+                studentToDelete = null;
+            }
+            
+            function confirmDeleteStudent() {
+                if (!studentToDelete) {
+                    return;
+                }
+                
+                // Chiudi il modale e reindirizza alla pagina di eliminazione
+                closeDeleteModal();
+                window.location.href = `/student/${studentToDelete}/delete`;
+            }
+            
+            // Chiudi modale cliccando fuori
+            document.addEventListener('click', function(e) {
+                const modal = document.getElementById('delete-modal');
+                if (e.target === modal) {
+                    closeDeleteModal();
                 }
             });
         </script>

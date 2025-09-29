@@ -65,45 +65,13 @@
             margin-bottom: 30px;
         }
         
-        .btn-primary {
-            background-color: #379975;
-            color: white;
-            padding: 12px 24px;
-            font-size: 1.1em;
-        }
         
-        .btn-primary:hover {
-            background-color: #2d7a5f;
-        }
-        
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-            padding: 12px 24px;
-            font-size: 1.1em;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-            padding: 12px 24px;
-            font-size: 1.1em;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-        
-        .actions {
+        .page-actions {
             text-align: center;
             margin-top: 30px;
         }
         
-        .actions a {
+        .page-actions a {
             margin: 0 10px;
         }
         
@@ -643,7 +611,7 @@
             </div>
             {% endif %}
             
-            <div class="actions">
+            <div class="page-actions">
                 <a href="/student/{{ student.id }}/edit" class="btn btn-primary">Modifica</a>
                 <a href="/student/{{ student.id }}/delete" class="btn btn-danger" onclick="return confirm('Sei sicuro di voler eliminare questo studente?')">Elimina</a>
                 <a href="/" class="btn btn-secondary">Torna alla Lista</a>
@@ -672,8 +640,10 @@
                             <td>{{ simulation.totalCfuRequired }}</td>
                             <td>{{ simulation.totalCfuIntegrative }}</td>
                             <td>
-                                <a href="/student/{{ student.id }}/simulation/{{ simulation.id }}" class="btn btn-primary btn-small" title="Visualizza/Modifica">📊</a>
-                                <button class="btn btn-danger btn-small" onclick="showDeleteModal({{ simulation.id }}, '{{ simulation.cdl }}', '{{ simulation.createdAt|date('d/m/Y') }}', {{ simulation.totalCfuRecognized }})" title="Elimina Simulazione">🗑️</button>
+                                <div class="actions">
+                                    <a href="/student/{{ student.id }}/simulation/{{ simulation.id }}" class="btn btn-primary btn-small" title="Visualizza/Modifica">📊</a>
+                                    <button class="btn btn-danger btn-small" onclick="showDeleteModal({{ simulation.id }}, '{{ simulation.cdl }}', '{{ simulation.createdAt|date('d/m/Y') }}', {{ simulation.totalCfuRecognized }})" title="Elimina Simulazione">🗑️</button>
+                                </div>
                             </td>
                         </tr>
                         {% else %}

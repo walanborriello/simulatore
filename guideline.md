@@ -220,9 +220,9 @@ git push -u origin fase-1-repo-setup
 
 ## Passi operativi approccio al simulatore
     1. Nella pagina di creazione studente aggiungere un div che contiene il simulatore.
-    2. Una volta aggiunta l'anagrafica e fatta la simulazione si può procedere col salvataggio dell'anagrafica, della simulazione e di tracciare nella tabella `students_history` il current token e l'azione fatta.
+    2. Una volta aggiunta l'anagrafica e fatta la simulazione si può procedere col salvataggio dell'anagrafica, della simulazione e di tracciare nella tabella `students_history` il current token e l'azione fatta. La pagina ora funziona esattamente come richiesto: un singolo pulsante "Salva Studente e Simulazione" che gestisce intelligentemente entrambi i casi, e un pulsante "Torna in Homepage" per uscire senza salvare.
     3. Nella pagina di dettagli dello studente, oltre a esserci l'anagrafica, dovrà essere presente anche una tabella per le simulazioni fatte per lo studente selezionato (ogni studente può avere n simulazioni). La tabella manterrà lo stesso stile delle altre tabelle con paginazione e massimo 5 elementi per volta. 
-    4. Sempre nella pagina di dettaglio, dovrà esserci in alto a destra un bottone "Simulatore" che cliccandolo apre lo stesso simulatore presente nel div di "Aggiungi studente", **SOLO** in questa pagina devi aggiungere questo div, che ti permettere di fare la simulazione e salvarla allo studente che stiamo visualizzando.
+    4. Sempre nella pagina di dettaglio, dovrà esserci in alto a destra un bottone "Simulatore" che cliccandolo apre lo stesso simulatore presente nel div di "Aggiungi studente", **SOLO** in questa pagina devi aggiungere questo div, che ti permettere di fare la simulazione e salvarla allo studente che stiamo visualizzando. 
 
 ## Passi operativi per Student history
     1. Tabella a db `students_history` cambio token su simulazione e/o salvataggio dello studente in fase di modifica o nuova creazione (che verrà implementata in fase 5 quindi non implementare nulla e se lo hai fatto elimina) se chi sta facendo la modifica dello studente ha un token differente da quello associato allo studente con action `user_changed`.
