@@ -1,0 +1,1129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Simulazione #{{ simulation.id }} - {{ student.firstName }} {{ student.lastName }}{% endblock %}
+
+{% block content %}
+            <div class="breadcrumb">
+                <a href="/">Home</a> > 
+                <a href="/student/{{ student.id }}">{{ student.firstName }} {{ student.lastName }}</a> > 
+                Simulazione #{{ simulation.id }}
+            </div>
+            
+            <h1>Simulazione #{{ simulation.id }}</h1>
+            
+            {% if successMessage %}
+                <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+                    ✅ {{ successMessage }}
+                </div>
+            {% endif %}
+            
+            <div class="student-info">
+                <h2>Studente: {{ student.firstName }} {{ student.lastName }}</h2>
+                <p><strong>Email:</strong> {{ student.email }}</p>
+                <p><strong>Data Creazione:</strong> {{ simulation.createdAt|date('d/m/Y H:i') }}</p>
+                {% if simulation.updatedAt != simulation.createdAt %}
+                <p><strong>Ultima Modifica:</strong> {{ simulation.updatedAt|date('d/m/Y H:i') }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Simulatore CFU -->
+            <div class="simulator-container">
+                <h2 class="simulator-title">🎓 Simulatore CFU</h2>
+                
+                <div class="simulator-section">
+                    <div class="form-group">
+                        <label for="simulator-cdl">Seleziona Corso di Laurea <span class="required">*</span></label>
+                        <select id="simulator-cdl" name="simulator-cdl" disabled>
+                            <option value="">Seleziona corso di laurea</option>
+                            {% for cdl in cdlOptions %}
+                                <option value="{{ cdl.cdl }}" {% if simulation.cdl == cdl.cdl %}selected{% endif %}>{{ cdl.cdl }} - {{ cdl.orient }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <h3 style="color: #E57552; margin-bottom: 20px;">Discipline Esterne da Riconoscere</h3>
+                    <div id="discipline-rows">
+                        <!-- Le righe delle discipline verranno aggiunte dinamicamente -->
+                    </div>
+                    <button type="button" class="btn-add-discipline" id="add-discipline">+ Aggiungi Disciplina</button>
+                    <button type="button" class="btn-simulate" id="simulate-btn" onclick="return false;">Calcola Simulazione</button>
+                </div>
+                
+                <!-- Risultati -->
+                <div class="results-container" id="results-container">
+                    <h3 style="color: #E57552; margin-bottom: 20px;">Risultati Simulazione</h3>
+                    
+                    <!-- Tabella Dettaglio -->
+                    <div class="table-section">
+                        <h4>Dettaglio Riconoscimenti</h4>
+                        <table class="results-table" id="detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Disciplina Unimarconi</th>
+                                    <th>CFU Richiesti</th>
+                                    <th>Disciplina Esterna</th>
+                                    <th>CFU Assegnati</th>
+                                    <th>Priorità</th>
+                                    <th>Note</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination" id="detail-pagination"></div>
+                    </div>
+                    
+                    <!-- Tabella Riepilogo -->
+                    <div class="table-section">
+                        <h4>Riepilogo</h4>
+                        <table class="results-table" id="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Disciplina Unimarconi</th>
+                                    <th>CFU Richiesti</th>
+                                    <th>CFU Riconosciuti</th>
+                                    <th>Integrativi Richiesti</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination" id="summary-pagination"></div>
+                    </div>
+                    
+                    <!-- Tabella Rimanenze -->
+                    <div class="table-section">
+                        <h4>Rimanenze</h4>
+                        <table class="results-table" id="leftover-table">
+                            <thead>
+                                <tr>
+                                    <th>Disciplina Esterna</th>
+                                    <th>CFU Residui</th>
+                                    <th>Motivazione</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <div class="pagination" id="leftover-pagination"></div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" id="save-simulation-btn" style="display: none; margin-top: 20px;">💾 Aggiorna Simulazione</button>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <a href="/student/{{ student.id }}" class="btn btn-secondary">Torna allo Studente</a>
+            </div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+</div>
+
+<style>
+    .student-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    
+    .student-info h2 {
+        color: #E57552;
+        margin-bottom: 15px;
+    }
+    
+    .student-info p {
+        margin: 5px 0;
+        color: #444;
+    }
+    
+    .breadcrumb {
+        margin-bottom: 20px;
+        color: #666;
+    }
+    
+    .breadcrumb a {
+        color: #E57552;
+        text-decoration: none;
+    }
+    
+    .breadcrumb a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Simulatore Styles (stesso stile di new.html.twig) */
+    .simulator-container {
+        margin-top: 40px;
+        padding: 30px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .simulator-title {
+        color: #E57552;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .simulator-section {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .required {
+        color: #e74c3c;
+    }
+    
+    .form-group select,
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group select:focus,
+    .form-group input:focus {
+        outline: none;
+        border-color: #E57552;
+        box-shadow: 0 0 0 2px rgba(229, 117, 82, 0.2);
+    }
+    
+    .form-group select:disabled {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    .discipline-row {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .discipline-row .form-group {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    
+    .discipline-row .form-group:first-child {
+        flex: 0 0 200px;
+    }
+    
+    .discipline-row .form-group:last-child {
+        flex: 0 0 100px;
+    }
+    
+    .btn-remove-discipline {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        height: 40px;
+    }
+    
+    .btn-remove-discipline:hover {
+        background: #c82333;
+    }
+    
+    .btn-add-discipline {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-bottom: 20px;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-add-discipline:hover {
+        background: #218838;
+    }
+    
+    .btn-simulate {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-simulate:hover {
+        background: #20c997;
+    }
+    
+    .results-container {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        margin-top: 25px;
+        display: none;
+    }
+    
+    .table-section {
+        margin-bottom: 30px;
+    }
+    
+    .table-section h4 {
+        color: #E57552;
+        margin-bottom: 15px;
+        font-size: 18px;
+    }
+    
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+    }
+    
+    .results-table th {
+        background: #E57552;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .results-table td {
+        padding: 12px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .results-table tr:nth-child(even) td {
+        background-color: #f8f9fa;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .pagination button {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    
+    .pagination button:hover {
+        background: #f8f9fa;
+    }
+    
+    .pagination button.active {
+        background: #379975;
+        color: white;
+        border-color: #379975;
+    }
+    
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Stili per stati risultati */
+    .stato-tot {
+        background-color: #d4edda !important;
+        color: #155724 !important;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .stato-parziale {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .stato-non {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    
+    /* Stili Select2 per mantenere dimensioni corrette */
+    .select2-container {
+        width: 100% !important;
+    }
+    .select2-container--default .select2-selection--single {
+        height: 40px !important;
+        border: 1px solid #ddd !important;
+        border-radius: 4px !important;
+        font-size: 14px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+        padding-left: 12px !important;
+        color: #333 !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px !important;
+        right: 8px !important;
+    }
+    .select2-dropdown {
+        border: 1px solid #ddd !important;
+        border-radius: 4px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    .select2-results__option {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+    }
+    .select2-results__option--highlighted {
+        background-color: #E57552 !important;
+        color: white !important;
+    }
+    
+    /* Loading Overlay */
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #E57552;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .actions {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 12px 24px;
+        margin: 0 10px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background: #379975;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary:hover {
+        background: #2d7a5f;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+</style>
+
+<script>
+    // Variabili globali
+    let currentCdl = '';
+    let currentResults = null;
+    const studentId = {{ student.id }};
+    const simulationId = {{ simulation.id }};
+    
+    // Inizializzazione
+    document.addEventListener('DOMContentLoaded', function() {
+        // Blocca tutti i submit di form per evitare refresh
+        document.addEventListener('submit', function(e) {
+            console.log('🚫 Bloccato submit di form:', e.target);
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+        
+        console.log('🚀 Inizializzazione simulatore...');
+        console.log('jQuery disponibile:', typeof $ !== 'undefined');
+        console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
+        
+        // Il campo CDL è disabilitato, non inizializziamo Select2
+        console.log('ℹ️ Campo CDL disabilitato per visualizzazione simulazione');
+        
+        // Imposta il CDL corrente se c'è una simulazione
+        const cdlSelect = document.getElementById('simulator-cdl');
+        if (cdlSelect.value) {
+            currentCdl = cdlSelect.value;
+            console.log('🎓 CDL corrente:', currentCdl);
+        }
+        
+        // Event listeners
+        document.getElementById('add-discipline').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            addDisciplineRow();
+        });
+        document.getElementById('simulate-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            console.log('🚫 Bloccato comportamento di default del pulsante');
+            simulate();
+            return false;
+        });
+        document.getElementById('save-simulation-btn').addEventListener('click', saveSimulation);
+        
+        // Carica i dati della simulazione
+        loadSimulationData();
+    });
+    
+    
+    // Gestisce il cambio di CDL
+    function handleCdlChange() {
+        const cdlSelect = document.getElementById('simulator-cdl');
+        const selectedCdl = cdlSelect.value;
+        
+        console.log('🔄 CDL cambiato:', selectedCdl);
+        
+        if (!selectedCdl) {
+            // Nascondi sezione discipline
+            document.getElementById('discipline-rows').style.display = 'none';
+            document.getElementById('add-discipline').style.display = 'none';
+            return;
+        }
+        
+        currentCdl = selectedCdl;
+        
+        // Mostra sezione discipline
+        document.getElementById('discipline-rows').style.display = 'block';
+        document.getElementById('add-discipline').style.display = 'block';
+        
+        // Aggiorna tutte le select SSD esistenti
+        updateAllSsdSelects();
+        
+        // Se non ci sono discipline, aggiungi 3 righe di default
+        const disciplineRows = document.getElementById('discipline-rows');
+        if (disciplineRows.children.length === 0) {
+            console.log('➕ Aggiungendo 3 righe di default per discipline');
+            for (let i = 0; i < 3; i++) {
+                addDisciplineRow();
+            }
+        }
+    }
+    
+    // Aggiorna tutte le select SSD
+    function updateAllSsdSelects() {
+        const ssdSelects = document.querySelectorAll('.ssd-select');
+        console.log('🔄 Aggiornando', ssdSelects.length, 'select SSD');
+        ssdSelects.forEach((select, index) => {
+            console.log(`🔄 Aggiornando select SSD ${index + 1}`);
+            updateSsdSelect(select);
+        });
+    }
+    
+    // Aggiorna una singola select SSD
+    function updateSsdSelect(select) {
+        console.log('🔄 Aggiornando select SSD');
+        
+        // Distruggi Select2 se esiste
+        if (typeof $ !== 'undefined' && $(select).hasClass('select2-hidden-accessible')) {
+            $(select).select2('destroy');
+        }
+        
+        // Pulisci opzioni
+        select.innerHTML = '<option value="">Seleziona SSD</option>';
+        
+        // Aggiungi opzioni dalle SSD passate dal controller
+        const ssdOptions = {{ ssdOptions|json_encode|raw }};
+        console.log('📚 SSD disponibili:', ssdOptions);
+        
+        ssdOptions.forEach((ssd, index) => {
+            console.log(`📖 SSD ${index + 1}:`, ssd);
+            const option = document.createElement('option');
+            option.value = ssd.riconoscibile;
+            option.textContent = ssd.riconoscibile;
+            select.appendChild(option);
+        });
+        
+        // Reinizializza Select2 solo se jQuery è disponibile
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $(select).select2({
+                placeholder: 'Seleziona SSD',
+                allowClear: true,
+                minimumResultsForSearch: 1
+            });
+            console.log('✅ Select2 reinizializzato per SSD');
+            
+            // Se c'è un valore selezionato, aggiorna la visualizzazione
+            if (select.value) {
+                $(select).trigger('change');
+            }
+        }
+    }
+    
+    // Aggiunge una riga di disciplina
+    function addDisciplineRow() {
+        const container = document.getElementById('discipline-rows');
+        const rowIndex = container.children.length + 1;
+        
+        console.log(`➕ Aggiungendo riga disciplina ${rowIndex}`);
+        
+        const row = document.createElement('div');
+        row.className = 'discipline-row';
+        row.innerHTML = `
+            <div class="form-group">
+                <label>SSD <span class="required">*</span></label>
+                <select class="ssd-select" name="ssd_${rowIndex}">
+                    <option value="">Seleziona SSD</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nome Disciplina <span class="required">*</span></label>
+                <input type="text" name="nome_${rowIndex}" placeholder="Nome della disciplina">
+            </div>
+            <div class="form-group">
+                <label>CFU <span class="required">*</span></label>
+                <input type="number" name="cfu_${rowIndex}" min="1" max="30" placeholder="CFU">
+            </div>
+            <button type="button" class="btn-remove-discipline" onclick="removeDisciplineRow(this)">🗑️</button>
+        `;
+        
+        container.appendChild(row);
+        
+        // Aggiorna la select SSD
+        const ssdSelect = row.querySelector('.ssd-select');
+        updateSsdSelect(ssdSelect);
+        
+        console.log(`✅ Aggiunta riga disciplina ${rowIndex}`);
+    }
+    
+    // Rimuove una riga di disciplina
+    function removeDisciplineRow(button) {
+        const row = button.closest('.discipline-row');
+        const container = document.getElementById('discipline-rows');
+        
+        console.log('🗑️ Tentativo rimozione riga disciplina');
+        
+        if (container.children.length > 1) {
+            row.remove();
+            console.log('✅ Riga disciplina rimossa');
+        } else {
+            console.log('⚠️ Tentativo di rimuovere l\'ultima disciplina');
+            alert('Deve rimanere almeno una disciplina');
+        }
+    }
+    
+    // Carica i dati della simulazione
+    function loadSimulationData() {
+        console.log('🔄 Caricamento dati simulazione dal template');
+        
+        // I dati sono già disponibili nel template
+        const simulationData = {
+            cdl: '{{ simulation.cdl }}',
+            inputData: {{ simulation.inputData|json_encode|raw }},
+            outputDetail: {{ simulation.detailResults|json_encode|raw }},
+            outputSummary: {{ simulation.summaryResults|json_encode|raw }},
+            outputLeftovers: {{ simulation.leftoverResults|json_encode|raw }}
+        };
+        
+        console.log('📋 Dati simulazione caricati:', simulationData);
+        
+        // Se c'è un CDL, mostra le discipline
+        if (simulationData.cdl) {
+            currentCdl = simulationData.cdl;
+            console.log('🎓 CDL corrente:', currentCdl);
+            
+            // Mostra sezione discipline
+            document.getElementById('discipline-rows').style.display = 'block';
+            document.getElementById('add-discipline').style.display = 'block';
+            
+            // Precompila le discipline esterne
+            if (simulationData.inputData && simulationData.inputData.length > 0) {
+                console.log('📚 Discipline da caricare:', simulationData.inputData);
+                
+                // Pulisci le righe esistenti
+                const disciplineRows = document.getElementById('discipline-rows');
+                disciplineRows.innerHTML = '';
+                
+                // Aggiungi le discipline dalla simulazione
+                simulationData.inputData.forEach((discipline, index) => {
+                    console.log(`📖 Caricamento disciplina ${index + 1}:`, discipline);
+                    addDisciplineRow();
+                });
+                
+                // Aspetta che Select2 sia inizializzato, poi precompila i valori
+                setTimeout(() => {
+                    simulationData.inputData.forEach((discipline, index) => {
+                        const rows = document.querySelectorAll('.discipline-row');
+                        const row = rows[index];
+                        
+                        if (row) {
+                            const ssdSelect = row.querySelector('.ssd-select');
+                            const nomeInput = row.querySelector('input[name^="nome_"]');
+                            const cfuInput = row.querySelector('input[name^="cfu_"]');
+                            
+                            if (ssdSelect) {
+                                ssdSelect.value = discipline.ssd || '';
+                                console.log(`✅ SSD impostato: ${discipline.ssd}`);
+                                
+                                // Aggiorna Select2 se è inizializzato
+                                if (typeof $ !== 'undefined' && $(ssdSelect).hasClass('select2-hidden-accessible')) {
+                                    $(ssdSelect).trigger('change');
+                                }
+                            }
+                            if (nomeInput) {
+                                nomeInput.value = discipline.nome || '';
+                                console.log(`✅ Nome impostato: ${discipline.nome}`);
+                            }
+                            if (cfuInput) {
+                                cfuInput.value = discipline.cfu || '';
+                                console.log(`✅ CFU impostato: ${discipline.cfu}`);
+                            }
+                        }
+                    });
+                }, 100);
+            } else {
+                console.log('⚠️ Nessuna disciplina da caricare, aggiungo 3 righe di default');
+                // Se non ci sono discipline, aggiungi 3 righe di default
+                for (let i = 0; i < 3; i++) {
+                    addDisciplineRow();
+                }
+            }
+            
+            // Mostra i risultati esistenti
+            if (simulationData.outputDetail || simulationData.outputSummary || simulationData.outputLeftovers) {
+                console.log('📊 Mostrando risultati esistenti');
+                
+                displayResults({
+                    detail: simulationData.outputDetail,
+                    summary: simulationData.outputSummary,
+                    leftovers: simulationData.outputLeftovers
+                });
+                
+                // Mostra il pulsante salva simulazione
+                document.getElementById('save-simulation-btn').style.display = 'block';
+            } else {
+                console.log('⚠️ Nessun risultato da mostrare');
+            }
+        }
+    }
+    
+    // Simula
+    async function simulate() {
+        console.log('🚀 Avvio simulazione...');
+        
+        if (!validateForm()) {
+            console.log('❌ Validazione fallita');
+            return;
+        }
+        
+        showLoading();
+        
+        try {
+            const data = {
+                cdl: currentCdl,
+                discipline: getDisciplineData()
+            };
+            
+            console.log('📤 Invio dati simulazione:', data);
+            
+            const response = await fetch('/api/simulate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            console.log('📥 Risposta simulazione:', result);
+            
+            if (result.success) {
+                console.log('✅ Simulazione completata con successo');
+                currentResults = result.data;
+                displayResults(result.data);
+                console.log('✅ DisplayResults completato');
+            } else {
+                console.log('❌ Errore nella simulazione:', result.error);
+                alert('Errore nella simulazione: ' + (result.error || 'Errore sconosciuto'));
+            }
+        } catch (error) {
+            console.error('❌ Errore simulazione:', error);
+            alert('Errore nella simulazione: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // Valida il form
+    function validateForm() {
+        let isValid = true;
+        
+        console.log('🔍 Validando form...');
+        
+        // Valida CDL
+        const cdlSelect = document.getElementById('simulator-cdl');
+        if (!cdlSelect.value) {
+            console.log('❌ CDL non selezionato');
+            alert('Seleziona un corso di laurea valido per procedere con la simulazione.');
+            isValid = false;
+        }
+        
+        // Valida discipline
+        const rows = document.querySelectorAll('.discipline-row');
+        console.log('🔍 Validando', rows.length, 'righe discipline');
+        
+        rows.forEach((row, index) => {
+            const ssdSelect = row.querySelector('.ssd-select');
+            const nomeInput = row.querySelector('input[name^="nome_"]');
+            const cfuInput = row.querySelector('input[name^="cfu_"]');
+            
+            if (!ssdSelect || !ssdSelect.value) {
+                console.log(`❌ SSD mancante per riga ${index + 1}`);
+                alert(`Seleziona il settore scientifico disciplinare per la disciplina ${index + 1}.`);
+                isValid = false;
+            }
+            
+            if (!nomeInput || !nomeInput.value.trim()) {
+                console.log(`❌ Nome mancante per riga ${index + 1}`);
+                alert(`Inserisci il nome completo della disciplina ${index + 1}.`);
+                isValid = false;
+            }
+            
+            if (!cfuInput || !cfuInput.value || cfuInput.value < 1 || cfuInput.value > 30) {
+                console.log(`❌ CFU non validi per riga ${index + 1}`);
+                alert(`Inserisci CFU validi (1-30) per la disciplina ${index + 1}.`);
+                isValid = false;
+            }
+        });
+        
+        console.log('🔍 Validazione completata:', isValid ? '✅' : '❌');
+        return isValid;
+    }
+    
+    // Ottiene i dati delle discipline
+    function getDisciplineData() {
+        const rows = document.querySelectorAll('.discipline-row');
+        const data = [];
+        
+        console.log('📚 Raccogliendo dati discipline da', rows.length, 'righe');
+        
+        rows.forEach((row, index) => {
+            const ssdSelect = row.querySelector('.ssd-select');
+            const nomeInput = row.querySelector('input[name^="nome_"]');
+            const cfuInput = row.querySelector('input[name^="cfu_"]');
+            
+            if (ssdSelect && nomeInput && cfuInput && 
+                ssdSelect.value && nomeInput.value && cfuInput.value) {
+                const discipline = {
+                    ssd: ssdSelect.value,
+                    nome: nomeInput.value.trim(),
+                    cfu: parseInt(cfuInput.value)
+                };
+                data.push(discipline);
+                console.log(`📖 Disciplina ${index + 1}:`, discipline);
+            }
+        });
+        
+        console.log('📚 Totale discipline valide:', data.length);
+        return data;
+    }
+    
+    // Mostra risultati
+    function displayResults(results) {
+        console.log('📊 Displaying results:', results);
+        const container = document.getElementById('results-container');
+        container.style.display = 'block';
+        
+        // Ordina i risultati: riconosciuti e parziali prima
+        if (results.detail) {
+            results.detail = sortResultsByStatus(results.detail);
+        }
+        if (results.summary) {
+            results.summary = sortResultsByStatus(results.summary);
+        }
+        
+        displayTable('detail-table', results.detail, 'detail-pagination');
+        displayTable('summary-table', results.summary, 'summary-pagination');
+        displayTable('leftover-table', results.leftovers, 'leftover-pagination');
+        
+        // Mostra pulsante salva simulazione
+        document.getElementById('save-simulation-btn').style.display = 'block';
+        
+        console.log('✅ Risultati mostrati senza refresh');
+    }
+    
+    // Ordina risultati per status (riconosciuti e parziali prima)
+    function sortResultsByStatus(data) {
+        if (!data || !Array.isArray(data)) return data;
+        
+        return data.sort((a, b) => {
+            // Usa direttamente il campo 'stato' invece di getLastValue
+            const statusA = (a.stato && typeof a.stato === 'string') ? a.stato.toLowerCase() : '';
+            const statusB = (b.stato && typeof b.stato === 'string') ? b.stato.toLowerCase() : '';
+            
+            // Priorità: TOT > PARZIALE > NON
+            const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
+            const priorityA = priority[statusA] || 4;
+            const priorityB = priority[statusB] || 4;
+            
+            return priorityA - priorityB;
+        });
+    }
+    
+    // Ottieni l'ultimo valore di un oggetto (per lo status)
+    function getLastValue(obj) {
+        const values = Object.values(obj);
+        return values[values.length - 1] || '';
+    }
+    
+    // Mostra tabella con paginazione
+    function displayTable(tableId, data, paginationId, itemsPerPage = 5) {
+        console.log(`📋 Displaying table ${tableId} with data:`, data);
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector('tbody');
+        const pagination = document.getElementById(paginationId);
+        
+        tbody.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            const row = tbody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = table.querySelectorAll('th').length;
+            cell.textContent = 'Nessun dato disponibile';
+            cell.style.textAlign = 'center';
+            cell.style.color = '#666';
+            pagination.innerHTML = '';
+            console.log(`⚠️ Nessun dato per tabella ${tableId}`);
+            return;
+        }
+        
+        let currentPage = 1;
+        const totalPages = Math.ceil(data.length / itemsPerPage);
+        
+        function showPage(page) {
+            tbody.innerHTML = '';
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, data.length);
+            const pageData = data.slice(startIndex, endIndex);
+            
+            console.log(`📄 Showing page ${page} of ${totalPages} for table ${tableId}`);
+            
+            pageData.forEach((item, itemIndex) => {
+                const row = tbody.insertRow();
+                
+                // Mapping corretto per ogni tabella
+                if (tableId === 'detail-table') {
+                    // Tabella Dettaglio: Disciplina Unimarconi, CFU Richiesti, Disciplina Esterna, CFU Assegnati, Priorità, Note, Stato
+                    row.insertCell().textContent = item.disciplina_unimarconi || '';
+                    row.insertCell().textContent = item.cfu_richiesti || '';
+                    row.insertCell().textContent = item.disciplina_esterna || '';
+                    row.insertCell().textContent = item.cfu_assegnati || '';
+                    row.insertCell().textContent = item.priorita || '';
+                    row.insertCell().textContent = item.note || '';
+                    
+                    // Ultima colonna: Stato (se presente)
+                    const statusCell = row.insertCell();
+                    if (item.stato && ['tot', 'parziale', 'non'].includes(item.stato.toLowerCase())) {
+                        const span = document.createElement('span');
+                        span.textContent = item.stato.toUpperCase();
+                        span.className = `stato-${item.stato.toLowerCase()}`;
+                        statusCell.appendChild(span);
+                    } else {
+                        statusCell.textContent = item.stato || '';
+                    }
+                } else if (tableId === 'summary-table') {
+                    // Tabella Riepilogo: Disciplina Unimarconi, CFU Richiesti, CFU Riconosciuti, Integrativi Richiesti, Stato
+                    row.insertCell().textContent = item.disciplina_unimarconi || '';
+                    row.insertCell().textContent = item.cfu_richiesti || '';
+                    row.insertCell().textContent = item.cfu_riconosciuti || '';
+                    row.insertCell().textContent = item.integrativi_richiesti || '';
+                    
+                    // Ultima colonna: Stato
+                    const statusCell = row.insertCell();
+                    if (item.stato && ['tot', 'parziale', 'non'].includes(item.stato.toLowerCase())) {
+                        const span = document.createElement('span');
+                        span.textContent = item.stato.toUpperCase();
+                        span.className = `stato-${item.stato.toLowerCase()}`;
+                        statusCell.appendChild(span);
+                    } else {
+                        statusCell.textContent = item.stato || '';
+                    }
+                } else if (tableId === 'leftover-table') {
+                    // Tabella Rimanenze: Disciplina Esterna, CFU Residui, Motivazione
+                    row.insertCell().textContent = item.disciplina_esterna || '';
+                    row.insertCell().textContent = item.cfu_residui || '';
+                    row.insertCell().textContent = item.motivazione || '';
+                }
+            });
+            
+            // Paginazione migliorata (massimo 5 pulsanti)
+            pagination.innerHTML = '';
+            console.log(`Paginazione: pagina ${page} di ${totalPages}`);
+            
+            if (page > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '←';
+                prevBtn.onclick = () => showPage(page - 1);
+                pagination.appendChild(prevBtn);
+            }
+            
+            let startPage = Math.max(1, page - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            console.log(`Mostrando pagine da ${startPage} a ${endPage}`);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = i === page ? 'active' : '';
+                pageBtn.onclick = () => showPage(i);
+                pagination.appendChild(pageBtn);
+            }
+            
+            if (page < totalPages) {
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '→';
+                nextBtn.onclick = () => showPage(page + 1);
+                pagination.appendChild(nextBtn);
+            }
+        }
+        
+        showPage(1);
+    }
+    
+    // Salva simulazione
+    async function saveSimulation() {
+        if (!currentResults) {
+            alert('Nessuna simulazione da salvare. Esegui prima una simulazione.');
+            return;
+        }
+        
+        const saveBtn = document.getElementById('save-simulation-btn');
+        saveBtn.style.display = 'none';
+        
+        // Mostra loading
+        showLoading();
+        
+        try {
+            const simulationData = {
+                cdl: currentCdl,
+                discipline: getDisciplineData(),
+                saveSimulation: true,
+                studentId: studentId
+            };
+            
+            console.log('💾 Salvando simulazione:', simulationData);
+            
+            // Aggiorna simulazione esistente
+            const response = await fetch(`/api/simulation/${simulationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(simulationData)
+            });
+            
+            const result = await response.json();
+            console.log('💾 Risposta salvataggio:', result);
+            
+            if (result.success) {
+                // Nascondi loading
+                hideLoading();
+                // Refresh della pagina per mostrare il messaggio di successo dalla sessione
+                window.location.reload();
+            } else {
+                hideLoading();
+                alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
+                saveBtn.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('❌ Errore salvataggio:', error);
+            hideLoading();
+            alert('❌ Errore nel salvataggio della simulazione: ' + error.message);
+            saveBtn.style.display = 'block';
+        }
+    }
+    
+    // Utility functions
+    function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+    }
+    
+    function hideError(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.display = 'none';
+        }
+    }
+    
+    function showLoading() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+    }
+    
+    function hideLoading() {
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+</script>
+{% endblock %}

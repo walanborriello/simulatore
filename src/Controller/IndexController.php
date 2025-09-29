@@ -97,6 +97,12 @@ class IndexController extends AbstractController
             
         $totalPages = ceil($totalStudents / $limit);
         
+        // Gestisci messaggio di successo
+        $successMessage = $request->query->get('success');
+        if ($successMessage) {
+            $session->set('success_message', $successMessage);
+        }
+        
         return $this->render('student/index.html.twig', [
             'students' => $students,
             'currentPage' => $page,

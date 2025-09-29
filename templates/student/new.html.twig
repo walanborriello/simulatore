@@ -48,20 +48,37 @@
             background-color: #2d7a5f;
         }
         
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        
         .btn-secondary {
             background-color: #6c757d;
             color: white;
             padding: 12px 24px;
-            font-size: 1.1em;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
         }
         
         .btn-secondary:hover {
             background-color: #5a6268;
+            color: white;
+            text-decoration: none;
         }
         
-        .form-actions {
-            margin-top: 30px;
+        /* CSS per form-actions rimosso */
+        
+        .final-actions {
+            margin-top: 40px;
+            padding: 20px;
             text-align: center;
+        }
+        
+        .final-actions .btn {
+            margin: 0 10px;
         }
         
         small {
@@ -135,7 +152,7 @@
         }
         
         .btn-simulate {
-            background: #E57552;
+            background: #28a745;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -148,8 +165,10 @@
         }
         
         .btn-simulate:hover {
-            background: #d65a3f;
+            background: #20c997;
         }
+        
+        /* CSS per btn-save-simulation rimosso */
         
         .error-message {
             color: #dc3545;
@@ -160,6 +179,12 @@
         
         .field-error {
             border-color: #dc3545 !important;
+        }
+        
+        .field-error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
         }
         
                 .loading-overlay {
@@ -283,6 +308,31 @@
             background-color: #f8f9fa;
         }
         
+        /* Stili per stati risultati */
+        .stato-tot {
+            background-color: #d4edda !important;
+            color: #155724 !important;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .stato-parziale {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .stato-non {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
         .pagination {
             display: flex;
             justify-content: center;
@@ -360,10 +410,6 @@
                     <textarea id="notes" name="notes" rows="4"></textarea>
                 </div>
                 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Crea Studente</button>
-                    <a href="/" class="btn btn-secondary">Annulla</a>
-                </div>
             </form>
         </div>
         
@@ -376,6 +422,9 @@
                     <label for="simulator-cdl">Seleziona Corso di Laurea <span class="required">*</span></label>
                     <select id="simulator-cdl" name="simulator-cdl">
                         <option value="">Seleziona corso di laurea...</option>
+                        {% for cdl in cdlOptions %}
+                            <option value="{{ cdl.cdl }}">{{ cdl.cdl }} - {{ cdl.orient }}</option>
+                        {% endfor %}
                     </select>
                     <div class="error-message" id="cdl-error"></div>
                 </div>
@@ -387,7 +436,7 @@
                     <!-- Le righe delle discipline verranno aggiunte dinamicamente -->
                 </div>
                 <button type="button" class="btn-add-discipline" id="add-discipline">+ Aggiungi Disciplina</button>
-                <button type="button" class="btn-simulate" id="simulate-btn">Calcola Simulazione</button>
+                <button type="button" class="btn-simulate" id="simulate-btn" onclick="return false;">Calcola Simulazione</button>
             </div>
             
             <!-- Risultati -->
@@ -446,7 +495,18 @@
                     </table>
                     <div class="pagination" id="leftover-pagination"></div>
                 </div>
+                
+                </div>
             </div>
+        
+        <!-- Pulsanti Finali -->
+        <div class="final-actions">
+            <button type="button" class="btn btn-primary btn-large" id="save-student-simulation-btn" onclick="saveStudentAndSimulation()">
+                💾 Salva Studente e Simulazione
+            </button>
+            <a href="/" class="btn btn-secondary btn-large">
+                🏠 Torna in Homepage
+            </a>
         </div>
         
         <!-- Loading Overlay -->
@@ -466,16 +526,22 @@
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
+                // Blocca tutti i submit di form per evitare refresh
+                document.addEventListener('submit', function(e) {
+                    console.log('🚫 Bloccato submit di form:', e.target);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
                 console.log('🚀 Inizializzazione simulatore...');
                 console.log('jQuery disponibile:', typeof $ !== 'undefined');
                 console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
                 
                 if (typeof $ !== 'undefined' && $.fn.select2) {
                     console.log('✅ jQuery e Select2 disponibili, inizializzo...');
-                    loadCdlOptions();
+                    initializeCdlSelect2();
                 } else {
-                    console.log('⚠️ jQuery/Select2 non disponibili, uso fallback...');
-                    loadCdlOptionsFallback();
+                    console.log('⚠️ jQuery/Select2 non disponibili, le opzioni sono già presenti nel DOM');
                 }
                 
                 addDisciplineRow(); // Riga 1
@@ -495,49 +561,31 @@
                     console.log('✅ Event listener standard attaccato');
                 }
                 
-                document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
-                document.getElementById('simulate-btn').addEventListener('click', simulate);
+                document.getElementById('add-discipline').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addDisciplineRow();
+                });
+                document.getElementById('simulate-btn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    console.log('🚫 Bloccato comportamento di default del pulsante');
+                    simulate();
+                    return false;
+                });
+                // Il pulsante save-simulation-btn è stato rimosso
             });
             
-            // Carica opzioni CDL (fallback senza Select2)
-            async function loadCdlOptionsFallback() {
-                try {
-                    const response = await fetch('/api/cdl');
-                    const cdlData = await response.json();
-                    
-                    const select = document.getElementById('simulator-cdl');
-                    select.innerHTML = '<option value="">Seleziona corso di laurea...</option>';
-                    
-                    cdlData.forEach(cdl => {
-                        const option = document.createElement('option');
-                        option.value = cdl.id;
-                        option.textContent = cdl.text;
-                        select.appendChild(option);
-                    });
-                    
-                    console.log('✅ CDL caricati senza Select2');
-                } catch (error) {
-                    console.error('❌ Errore caricamento CDL:', error);
-                }
-            }
             
-            // Carica opzioni CDL
-            async function loadCdlOptions() {
-                try {
-                    const response = await fetch('/api/cdl');
-                    const cdlData = await response.json();
-                    
-                    const select = document.getElementById('simulator-cdl');
-                    cdlData.forEach(cdl => {
-                        const option = document.createElement('option');
-                        option.value = cdl.id;
-                        option.textContent = cdl.text;
-                        select.appendChild(option);
-                    });
-                    
-                    // Distruggi Select2 esistente e ricostruisci
+            // Inizializza Select2 per CDL (le opzioni sono già presenti nel DOM)
+            function initializeCdlSelect2() {
                     console.log('jQuery disponibile:', typeof $ !== 'undefined');
                     console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
+                
+                const cdlSelect = document.getElementById('simulator-cdl');
+                const options = cdlSelect.querySelectorAll('option');
+                console.log('Opzioni presenti nella select:', options.length);
                     
                     if (typeof $ !== 'undefined' && $.fn.select2) {
                         // Controlla se Select2 è già inizializzato
@@ -573,15 +621,11 @@
                             }
                         }, 100);
                         
-                        console.log('✅ Select2 ricostruito per CDL con search box');
+                    console.log('✅ Select2 inizializzato per CDL con search box');
                     } else {
                         console.error('❌ jQuery o Select2 non caricati');
                         console.log('jQuery:', typeof $);
                         console.log('Select2:', typeof $ !== 'undefined' ? $.fn.select2 : 'jQuery non disponibile');
-                    }
-                    
-                } catch (error) {
-                    console.error('Errore nel caricamento CDL:', error);
                 }
             }
             
@@ -833,9 +877,12 @@
                     const result = await response.json();
                     
                     if (result.success) {
+                        console.log('✅ Simulazione completata con successo');
                         currentResults = result.data;
                         displayResults(result.data);
+                        console.log('✅ DisplayResults completato');
                     } else {
+                        console.log('❌ Errore nella simulazione:', result.error);
                         alert('Errore nella simulazione: ' + (result.error || 'Errore sconosciuto'));
                     }
                 } catch (error) {
@@ -913,16 +960,50 @@
                 return data;
             }
             
+            // Ordina risultati per status (riconosciuti e parziali prima)
+            function sortResultsByStatus(data) {
+                if (!data || !Array.isArray(data)) return data;
+                
+                return data.sort((a, b) => {
+                    const statusA = getLastValue(a).toLowerCase();
+                    const statusB = getLastValue(b).toLowerCase();
+                    
+                    // Priorità: TOT > PARZIALE > NON
+                    const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
+                    const priorityA = priority[statusA] || 4;
+                    const priorityB = priority[statusB] || 4;
+                    
+                    return priorityA - priorityB;
+                });
+            }
+            
+            // Ottieni l'ultimo valore di un oggetto (per lo status)
+            function getLastValue(obj) {
+                const values = Object.values(obj);
+                return values[values.length - 1] || '';
+            }
+            
             // Mostra risultati
             function displayResults(results) {
+                console.log('📊 Displaying results:', results);
                 const container = document.getElementById('results-container');
                 container.style.display = 'block';
+                
+                // Ordina i risultati: riconosciuti e parziali prima
+                if (results.detail) {
+                    results.detail = sortResultsByStatus(results.detail);
+                }
+                if (results.summary) {
+                    results.summary = sortResultsByStatus(results.summary);
+                }
                 
                 displayTable('detail-table', results.detail, 'detail-pagination');
                 displayTable('summary-table', results.summary, 'summary-pagination');
                 displayTable('leftover-table', results.leftovers, 'leftover-pagination');
                 
-                container.scrollIntoView({ behavior: 'smooth' });
+                // Il pulsante salva simulazione è stato rimosso
+                
+                console.log('✅ Risultati mostrati senza refresh');
             }
             
             // Mostra tabella con paginazione
@@ -954,15 +1035,49 @@
                     
                     pageData.forEach(item => {
                         const row = tbody.insertRow();
-                        Object.values(item).forEach(value => {
+                        Object.values(item).forEach((value, index) => {
                             const cell = row.insertCell();
-                            cell.textContent = value || '';
+                            
+                            // Applica stili per stato (ultima colonna)
+                            if (index === Object.keys(item).length - 1 && value && ['tot', 'parziale', 'non'].includes(value.toLowerCase())) {
+                                console.log(`Applicando stile per stato: ${value}`);
+                                const span = document.createElement('span');
+                                span.textContent = value.toUpperCase();
+                                span.className = `stato-${value.toLowerCase()}`;
+                                cell.appendChild(span);
+                            } else {
+                                cell.textContent = value || '';
+                            }
                         });
                     });
                     
-                    // Aggiorna paginazione
+                    // Paginazione migliorata (massimo 5 pulsanti)
                     pagination.innerHTML = '';
-                    for (let i = 1; i <= totalPages; i++) {
+                    
+                    console.log(`Paginazione: pagina ${page} di ${totalPages}`);
+                    
+                    // Pulsante precedente
+                    if (page > 1) {
+                        const prevBtn = document.createElement('button');
+                        prevBtn.textContent = '←';
+                        prevBtn.addEventListener('click', () => {
+                            currentPage = page - 1;
+                            showPage(page - 1);
+                        });
+                        pagination.appendChild(prevBtn);
+                    }
+                    
+                    // Numeri pagina (massimo 5)
+                    let startPage = Math.max(1, page - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+                    
+                    if (endPage - startPage < 4) {
+                        startPage = Math.max(1, endPage - 4);
+                    }
+                    
+                    console.log(`Mostrando pagine da ${startPage} a ${endPage}`);
+                    
+                    for (let i = startPage; i <= endPage; i++) {
                         const button = document.createElement('button');
                         button.textContent = i;
                         button.className = i === page ? 'active' : '';
@@ -972,10 +1087,25 @@
                         });
                         pagination.appendChild(button);
                     }
+                    
+                    // Pulsante successivo
+                    if (page < totalPages) {
+                        const nextBtn = document.createElement('button');
+                        nextBtn.textContent = '→';
+                        nextBtn.addEventListener('click', () => {
+                            currentPage = page + 1;
+                            showPage(page + 1);
+                        });
+                        pagination.appendChild(nextBtn);
+                    }
                 }
                 
                 showPage(1);
             }
+            
+            // La funzione createStudent è stata rimossa - ora si usa saveStudentAndSimulation
+            
+            // La funzione saveSimulation è stata rimossa - ora si usa saveStudentAndSimulation
             
             // Utility functions
             function showError(elementId, message) {
@@ -1014,6 +1144,214 @@
             
             function hideLoading() {
                 document.getElementById('loading-overlay').style.display = 'none';
+            }
+            
+            // Salva studente e simulazione
+            async function saveStudentAndSimulation() {
+                console.log('💾 Salvataggio studente e simulazione...');
+                
+                // Valida prima i dati dello studente
+                if (!validateStudentForm()) {
+                    return;
+                }
+                
+                showLoading();
+                
+                try {
+                    // Controlla se è stata fatta una simulazione
+                    const hasSimulation = currentResults !== null && currentCdl !== '';
+                    
+                    console.log('📊 Simulazione presente:', hasSimulation);
+                    
+                    if (hasSimulation) {
+                        // Salva sia studente che simulazione
+                        console.log('🔄 Salvataggio studente + simulazione...');
+                        
+                        // Prima salva lo studente usando form data
+                        const formData = new FormData();
+                        formData.append('firstName', document.getElementById('firstName').value.trim());
+                        formData.append('lastName', document.getElementById('lastName').value.trim());
+                        formData.append('email', document.getElementById('email').value.trim());
+                        formData.append('codiceFiscale', document.getElementById('codiceFiscale').value.trim());
+                        formData.append('ateneoProvenienza', document.getElementById('ateneoProvenienza').value.trim());
+                        formData.append('corsoStudioInteresse', document.getElementById('corsoStudioInteresse').value.trim());
+                        formData.append('phone', document.getElementById('phone').value.trim());
+                        formData.append('notes', document.getElementById('notes').value.trim());
+                        
+                        const studentResponse = await fetch('/student/new', {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+                        
+                        if (!studentResponse.ok) {
+                            throw new Error('Errore nel salvataggio dello studente');
+                        }
+                        
+                        const studentResult = await studentResponse.json();
+                        const studentId = studentResult.studentId;
+                        
+                        console.log('✅ Studente salvato con ID:', studentId);
+                        
+                        // Poi salva la simulazione
+                    const simulationData = {
+                        cdl: currentCdl,
+                        discipline: getDisciplineData(),
+                        saveSimulation: true,
+                            studentId: parseInt(studentId)
+                    };
+                    
+                        const simulationResponse = await fetch('/api/simulate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(simulationData)
+                    });
+                    
+                        const simulationResult = await simulationResponse.json();
+                        
+                        if (simulationResult.success) {
+                            console.log('✅ Simulazione salvata:', simulationResult);
+                            // Redirect alla pagina dello studente
+                            window.location.href = `/student/${studentId}`;
+                    } else {
+                            throw new Error('Errore nel salvataggio della simulazione: ' + (simulationResult.message || 'Errore sconosciuto'));
+                        }
+                        
+                    } else {
+                        // Salva solo lo studente
+                        console.log('🔄 Salvataggio solo studente...');
+                        
+                        const formData = new FormData();
+                        formData.append('firstName', document.getElementById('firstName').value.trim());
+                        formData.append('lastName', document.getElementById('lastName').value.trim());
+                        formData.append('email', document.getElementById('email').value.trim());
+                        formData.append('codiceFiscale', document.getElementById('codiceFiscale').value.trim());
+                        formData.append('ateneoProvenienza', document.getElementById('ateneoProvenienza').value.trim());
+                        formData.append('corsoStudioInteresse', document.getElementById('corsoStudioInteresse').value.trim());
+                        formData.append('phone', document.getElementById('phone').value.trim());
+                        formData.append('notes', document.getElementById('notes').value.trim());
+                        
+                        const studentResponse = await fetch('/student/new', {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+                        
+                        if (!studentResponse.ok) {
+                            throw new Error('Errore nel salvataggio dello studente');
+                        }
+                        
+                        const studentResult = await studentResponse.json();
+                        const studentId = studentResult.studentId;
+                        
+                        console.log('✅ Studente salvato con ID:', studentId);
+                        
+                        // Redirect alla pagina dello studente
+                        window.location.href = `/student/${studentId}`;
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Errore nel salvataggio:', error);
+                    hideLoading();
+                    alert('❌ Errore nel salvataggio: ' + error.message);
+                }
+            }
+            
+            // Valida form studente
+            function validateStudentForm() {
+                let isValid = true;
+                
+                // Valida nome
+                const firstName = document.getElementById('firstName');
+                if (!firstName.value.trim()) {
+                    showFieldError(firstName, 'Il nome è obbligatorio');
+                    isValid = false;
+                }
+                
+                // Valida cognome
+                const lastName = document.getElementById('lastName');
+                if (!lastName.value.trim()) {
+                    showFieldError(lastName, 'Il cognome è obbligatorio');
+                    isValid = false;
+                }
+                
+                // Valida email
+                const email = document.getElementById('email');
+                if (!email.value.trim()) {
+                    showFieldError(email, 'L\'email è obbligatoria');
+                    isValid = false;
+                } else if (!isValidEmail(email.value)) {
+                    showFieldError(email, 'Inserisci un\'email valida');
+                    isValid = false;
+                }
+                
+                // Valida codice fiscale
+                const codiceFiscale = document.getElementById('codiceFiscale');
+                if (!codiceFiscale.value.trim()) {
+                    showFieldError(codiceFiscale, 'Il codice fiscale è obbligatorio');
+                    isValid = false;
+                } else if (codiceFiscale.value.length !== 16) {
+                    showFieldError(codiceFiscale, 'Il codice fiscale deve essere di 16 caratteri');
+                    isValid = false;
+                }
+                
+                // Valida ateneo
+                const ateneoProvenienza = document.getElementById('ateneoProvenienza');
+                if (!ateneoProvenienza.value.trim()) {
+                    showFieldError(ateneoProvenienza, 'L\'ateneo di provenienza è obbligatorio');
+                    isValid = false;
+                }
+                
+                // Valida corso di studio
+                const corsoStudioInteresse = document.getElementById('corsoStudioInteresse');
+                if (!corsoStudioInteresse.value.trim()) {
+                    showFieldError(corsoStudioInteresse, 'Il corso di studio di interesse è obbligatorio');
+                    isValid = false;
+                }
+                
+                // Valida telefono
+                const phone = document.getElementById('phone');
+                if (!phone.value.trim()) {
+                    showFieldError(phone, 'Il telefono è obbligatorio');
+                    isValid = false;
+                }
+                
+                // Scroll al primo errore
+                if (!isValid) {
+                    const firstError = document.querySelector('.field-error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+                
+                return isValid;
+            }
+            
+            // Valida email
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+            
+            // Mostra errore per campo
+            function showFieldError(field, message) {
+                field.classList.add('field-error');
+                
+                // Crea o aggiorna messaggio di errore
+                let errorElement = field.parentNode.querySelector('.field-error-message');
+                if (!errorElement) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'field-error-message';
+                    errorElement.style.cssText = 'color: #dc3545; font-size: 14px; margin-top: 5px;';
+                    field.parentNode.appendChild(errorElement);
+                }
+                errorElement.textContent = message;
             }
         </script>
 {% endblock %}

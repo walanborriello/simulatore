@@ -24,6 +24,7 @@ class SimulatoreController extends AbstractController
         $this->em = $em;
     }
 
+
     #[Route('/api/simulate', name: 'app_simulate', methods: ['POST'])]
     public function simulate(Request $request, SessionInterface $session): JsonResponse
     {
@@ -45,12 +46,23 @@ class SimulatoreController extends AbstractController
             // Esegui simulazione
             $result = $this->simulatorService->simulate($data);
 
-            // Salva simulazione se studentId è fornito
+            // Salva simulazione solo se esplicitamente richiesto
             $simulationId = null;
-            if (isset($data['studentId']) && $data['studentId']) {
+            if (isset($data['saveSimulation']) && $data['saveSimulation'] === true && isset($data['studentId']) && $data['studentId']) {
                 $simulation = $this->saveSimulation($data, $result, $session->get('user_token'));
                 $simulationId = $simulation->getId();
                 $result['simulationId'] = $simulationId;
+                
+                // Log dell'azione simulated
+                $this->logStudentAction($this->em, $data['studentId'], $session->get('user_token'), 'simulated', $simulationId);
+                
+                // Imposta il messaggio di successo nella sessione
+                // Se studentId è presente, significa che è stato salvato anche lo studente
+                if (isset($data['studentId']) && $data['studentId']) {
+                    $session->set('success_message', '✅ Studente e simulazione salvati con successo!');
+                } else {
+                    $session->set('success_message', '✅ Simulazione salvata con successo!');
+                }
             }
 
             return new JsonResponse([
@@ -108,6 +120,41 @@ class SimulatoreController extends AbstractController
         return new JsonResponse($ssdList);
     }
 
+    #[Route('/api/simulation/{id}/delete', name: 'app_delete_simulation', methods: ['DELETE'])]
+    public function deleteSimulation(int $id, SessionInterface $session): JsonResponse
+    {
+        try {
+            $this->checkToken($session);
+
+            $simulation = $this->em->getRepository(\App\Entity\Simulation::class)->find($id);
+            
+            if (!$simulation) {
+                return new JsonResponse(['error' => 'Simulazione non trovata'], 404);
+            }
+
+            // Log dell'eliminazione prima di eliminare
+            $this->logStudentAction($this->em, $simulation->getStudentId(), $session->get('user_token'), 'simulation_deleted', $id);
+
+            // Elimina la simulazione
+            $this->em->remove($simulation);
+            $this->em->flush();
+
+            // Imposta il messaggio di successo nella sessione
+            $session->set('success_message', '✅ Simulazione eliminata con successo!');
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Simulazione eliminata con successo'
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => 'Errore durante l\'eliminazione',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
     private function validateInput(array $data): array
     {
@@ -144,7 +191,7 @@ class SimulatoreController extends AbstractController
         $simulation = new Simulation();
         $simulation->setStudentId($input['studentId']);
         $simulation->setCdl($input['cdl']);
-        $simulation->setInputData($input);
+        $simulation->setInputData($input['discipline']);
         $simulation->setDetailResults($result['detail']);
         $simulation->setSummaryResults($result['summary']);
         $simulation->setLeftoverResults($result['leftovers']);
@@ -181,4 +228,18 @@ class SimulatoreController extends AbstractController
             throw new AccessDeniedHttpException('Accesso negato. Ruolo non valido.');
         }
     }
+    
+    private function logStudentAction(EntityManagerInterface $em, int $studentId, string $currentToken, string $action, ?int $simulationId = null): void
+    {
+        $log = new \App\Entity\StudentManagement();
+        $log->setStudentId($studentId);
+        $log->setCurrentToken($currentToken);
+        $log->setAction($action);
+        $log->setSimulationId($simulationId);
+        $log->setModifiedAt(new \DateTime());
+        
+        $em->persist($log);
+        $em->flush();
+    }
+    
 }

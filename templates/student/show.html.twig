@@ -146,35 +146,6 @@
             background-color: #f8f9fa;
         }
         
-        .simulations-pagination {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .simulations-pagination button {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        
-        .simulations-pagination button:hover {
-            background: #f8f9fa;
-        }
-        
-        .simulations-pagination button.active {
-            background: #379975;
-            color: white;
-            border-color: #379975;
-        }
-        
-        .simulations-pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
         
         /* Simulatore Styles (stesso stile di new.html.twig) */
         .simulator-container {
@@ -242,7 +213,7 @@
         }
         
         .btn-simulate {
-            background: #E57552;
+            background: #28a745;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -255,7 +226,24 @@
         }
         
         .btn-simulate:hover {
-            background: #d65a3f;
+            background: #20c997;
+        }
+        
+        .btn-save-simulation {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-save-simulation:hover {
+            background: #20c997;
         }
         
         .error-message {
@@ -390,6 +378,31 @@
             background-color: #f8f9fa;
         }
         
+        /* Stili per stati risultati */
+        .stato-tot {
+            background-color: #d4edda !important;
+            color: #155724 !important;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .stato-parziale {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .stato-non {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
         .pagination {
             display: flex;
             justify-content: center;
@@ -448,18 +461,147 @@
         .form-group {
             margin-bottom: 20px;
         }
+        
+        /* Stili Modale */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #E57552;
+            font-size: 20px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .modal-close:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .modal-body p {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .simulation-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #E57552;
+        }
+        
+        .simulation-info strong {
+            color: #E57552;
+        }
+        
+        .warning-text {
+            color: #dc3545 !important;
+            font-weight: 600;
+            background: #fff5f5;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #fecaca;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px 25px;
+            border-top: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 12px;
+            margin: 0 2px;
+        }
 {% endblock %}
 
 {% block content %}
+        {% if successMessage %}
+            <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+                ✅ {{ successMessage }}
+            </div>
+        {% endif %}
+        
         <div class="student-details">
             <div class="student-header">
                 <div class="student-info">
                     <h1>{{ student.fullName }}</h1>
                     <div class="student-email">{{ student.email }}</div>
                 </div>
-                <div class="header-actions">
-                    <button type="button" class="btn btn-primary" id="toggle-simulator">🎓 Simulatore</button>
-                </div>
+            <div class="header-actions">
+                <button type="button" class="btn btn-primary" id="toggle-simulator">🎓 Simulatore</button>
+            </div>
             </div>
             
             <div class="details-grid">
@@ -530,7 +672,8 @@
                             <td>{{ simulation.totalCfuRequired }}</td>
                             <td>{{ simulation.totalCfuIntegrative }}</td>
                             <td>
-                                <button type="button" class="btn btn-secondary btn-small" onclick="viewSimulation({{ simulation.id }})">👁️</button>
+                                <a href="/student/{{ student.id }}/simulation/{{ simulation.id }}" class="btn btn-primary btn-small" title="Visualizza/Modifica">📊</a>
+                                <button class="btn btn-danger btn-small" onclick="showDeleteModal({{ simulation.id }}, '{{ simulation.cdl }}', '{{ simulation.createdAt|date('d/m/Y') }}', {{ simulation.totalCfuRecognized }})" title="Elimina Simulazione">🗑️</button>
                             </td>
                         </tr>
                         {% else %}
@@ -542,7 +685,6 @@
                         {% endfor %}
                     </tbody>
                 </table>
-                <div class="simulations-pagination" id="simulations-pagination"></div>
             </div>
             
             <!-- Simulatore CFU -->
@@ -554,6 +696,9 @@
                         <label for="simulator-cdl">Seleziona Corso di Laurea <span class="required">*</span></label>
                         <select id="simulator-cdl" name="simulator-cdl">
                             <option value="">Seleziona corso di laurea...</option>
+                            {% for cdl in cdlOptions %}
+                                <option value="{{ cdl.cdl }}">{{ cdl.cdl }} - {{ cdl.orient }}</option>
+                            {% endfor %}
                         </select>
                         <div class="error-message" id="cdl-error"></div>
                     </div>
@@ -565,7 +710,7 @@
                         <!-- Le righe delle discipline verranno aggiunte dinamicamente -->
                     </div>
                     <button type="button" class="btn-add-discipline" id="add-discipline">+ Aggiungi Disciplina</button>
-                    <button type="button" class="btn-simulate" id="simulate-btn">Calcola Simulazione</button>
+                    <button type="button" class="btn-simulate" id="simulate-btn" onclick="return false;">Calcola Simulazione</button>
                 </div>
                 
                 <!-- Risultati -->
@@ -622,10 +767,15 @@
                             </thead>
                             <tbody></tbody>
                         </table>
-                        <div class="pagination" id="leftover-pagination"></div>
-                    </div>
+                    <div class="pagination" id="leftover-pagination"></div>
+                </div>
+                
+                <!-- Pulsante Salva Simulazione -->
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="button" class="btn-save-simulation" id="save-simulation-btn" style="display: none;">💾 Salva Simulazione</button>
                 </div>
             </div>
+        </div>
         </div>
         
         <!-- Loading Overlay -->
@@ -633,6 +783,29 @@
             <div class="loading-content">
                 <div class="loading-spinner"></div>
                 <div class="loading-text">Caricamento in corso...</div>
+            </div>
+        </div>
+        
+        <!-- Modale Conferma Eliminazione -->
+        <div class="modal-overlay" id="delete-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🗑️ Conferma Eliminazione</h3>
+                    <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Sei sicuro di voler eliminare questa simulazione?</p>
+                    <div class="simulation-info">
+                        <strong>CDL:</strong> <span id="modal-cdl"></span><br>
+                        <strong>Data:</strong> <span id="modal-date"></span><br>
+                        <strong>CFU Riconosciuti:</strong> <span id="modal-cfu-rec"></span>
+                    </div>
+                    <p class="warning-text">⚠️ Questa azione non può essere annullata.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()">Annulla</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteSimulation()">Elimina</button>
+                </div>
             </div>
         </div>
         
@@ -646,17 +819,16 @@
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
+                // Blocca tutti i submit di form per evitare refresh
+                document.addEventListener('submit', function(e) {
+                    console.log('🚫 Bloccato submit di form:', e.target);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
                 console.log('🚀 Inizializzazione simulatore...');
                 console.log('jQuery disponibile:', typeof $ !== 'undefined');
                 console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
-                
-                if (typeof $ !== 'undefined' && $.fn.select2) {
-                    console.log('✅ jQuery e Select2 disponibili, inizializzo...');
-                    loadCdlOptions();
-                } else {
-                    console.log('⚠️ jQuery/Select2 non disponibili, uso fallback...');
-                    loadCdlOptionsFallback();
-                }
                 
                 addDisciplineRow(); // Riga 1
                 addDisciplineRow(); // Riga 2
@@ -665,24 +837,28 @@
                 // Event listeners
                 document.getElementById('toggle-simulator').addEventListener('click', toggleSimulator);
                 
-                const cdlSelect = document.getElementById('simulator-cdl');
-                console.log('🔗 Attaccando event listener a CDL select:', cdlSelect);
                 
-                // Usa l'evento Select2 se disponibile, altrimenti evento standard
-                if (typeof $ !== 'undefined' && $.fn.select2) {
-                    $(cdlSelect).on('change', handleCdlChange);
-                    console.log('✅ Event listener Select2 attaccato');
-                } else {
-                    cdlSelect.addEventListener('change', handleCdlChange);
-                    console.log('✅ Event listener standard attaccato');
-                }
+                document.getElementById('add-discipline').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addDisciplineRow();
+                });
+                document.getElementById('simulate-btn').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    console.log('🚫 Bloccato comportamento di default del pulsante');
+                    simulate();
+                    return false;
+                });
+                document.getElementById('save-simulation-btn').addEventListener('click', saveSimulation);
                 
-                document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
-                document.getElementById('simulate-btn').addEventListener('click', simulate);
+                // Inizializza paginazione simulazioni
+                initSimulationsPagination();
             });
             
             // Toggle simulatore
-            function toggleSimulator() {
+            async function toggleSimulator() {
                 const container = document.getElementById('simulator-container');
                 const button = document.getElementById('toggle-simulator');
                 
@@ -690,67 +866,40 @@
                     container.style.display = 'block';
                     button.textContent = '❌ Chiudi Simulatore';
                     container.scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Le opzioni CDL sono già presenti nel DOM
+                    console.log('✅ Opzioni CDL già presenti nel DOM');
+                    
+                    // Inizializza Select2 se non è già inizializzato
+                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                    const cdlSelect = document.getElementById('simulator-cdl');
+                        if (!$(cdlSelect).hasClass('select2-hidden-accessible')) {
+                            initializeCdlSelect2();
+                        }
+                    }
                 } else {
                     container.style.display = 'none';
                     button.textContent = '🎓 Simulatore';
                 }
             }
             
-            // Carica opzioni CDL (fallback senza Select2)
-            async function loadCdlOptionsFallback() {
-                try {
-                    const response = await fetch('/api/cdl');
-                    const cdlData = await response.json();
+            // Inizializza Select2 per CDL (le opzioni sono già presenti nel DOM)
+            function initializeCdlSelect2() {
+                console.log('🔄 Inizializzazione Select2 per CDL (opzioni già presenti)...');
                     
-                    const select = document.getElementById('simulator-cdl');
-                    select.innerHTML = '<option value="">Seleziona corso di laurea...</option>';
+                    const cdlSelect = document.getElementById('simulator-cdl');
                     
-                    cdlData.forEach(cdl => {
-                        const option = document.createElement('option');
-                        option.value = cdl.id;
-                        option.textContent = cdl.text;
-                        select.appendChild(option);
-                    });
-                    
-                    console.log('✅ CDL caricati senza Select2');
-                } catch (error) {
-                    console.error('❌ Errore caricamento CDL:', error);
-                }
-            }
-            
-            // Carica opzioni CDL
-            async function loadCdlOptions() {
-                try {
-                    const response = await fetch('/api/cdl');
-                    const cdlData = await response.json();
-                    
-                    const select = document.getElementById('simulator-cdl');
-                    cdlData.forEach(cdl => {
-                        const option = document.createElement('option');
-                        option.value = cdl.id;
-                        option.textContent = cdl.text;
-                        select.appendChild(option);
-                    });
-                    
-                    // Distruggi Select2 esistente e ricostruisci
-                    console.log('jQuery disponibile:', typeof $ !== 'undefined');
-                    console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
-                    
-                    if (typeof $ !== 'undefined' && $.fn.select2) {
-                        // Controlla se Select2 è già inizializzato
-                        if ($('#simulator-cdl').hasClass('select2-hidden-accessible')) {
-                            console.log('Select2 CDL già inizializzato, distruggo e ricostruisco...');
-                            $('#simulator-cdl').select2('destroy');
-                        } else {
-                            console.log('Select2 CDL non inizializzato, procedo con creazione...');
+                        // Distruggi Select2 se esiste
+                        if ($(cdlSelect).hasClass('select2-hidden-accessible')) {
+                            $(cdlSelect).select2('destroy');
                         }
                         
-                        // Inizializza Select2 con configurazione forzata
-                        $('#simulator-cdl').select2({
+                        // Inizializza Select2
+                        $(cdlSelect).select2({
                             placeholder: 'Seleziona corso di laurea...',
                             allowClear: true,
                             width: '100%',
-                            minimumResultsForSearch: 1, // Mostra search box sempre
+                            minimumResultsForSearch: 1,
                             language: {
                                 noResults: function() {
                                     return "Nessun risultato trovato";
@@ -761,26 +910,11 @@
                             }
                         });
                         
-                        // Forza la creazione della search box
-                        setTimeout(function() {
-                            const searchContainer = $('.select2-search');
-                            if (searchContainer.length === 0) {
-                                console.log('🔧 Forzando creazione search box...');
-                                $('.select2-dropdown').prepend('<div class="select2-search select2-search--dropdown"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" aria-autocomplete="list" placeholder="Cerca..."></div>');
-                            }
-                        }, 100);
-                        
-                        console.log('✅ Select2 ricostruito per CDL con search box');
-                    } else {
-                        console.error('❌ jQuery o Select2 non caricati');
-                        console.log('jQuery:', typeof $);
-                        console.log('Select2:', typeof $ !== 'undefined' ? $.fn.select2 : 'jQuery non disponibile');
-                    }
-                    
-                } catch (error) {
-                    console.error('Errore nel caricamento CDL:', error);
-                }
+                // Event listener per cambio CDL
+                        $(cdlSelect).on('change', handleCdlChange);
+                console.log('✅ Select2 inizializzato per CDL');
             }
+            
             
             // Gestisce cambio CDL
             async function handleCdlChange() {
@@ -1031,14 +1165,12 @@
                     const result = await response.json();
                     
                     if (result.success) {
+                        console.log('✅ Simulazione completata con successo');
                         currentResults = result.data;
                         displayResults(result.data);
-                        
-                        // Ricarica la pagina per aggiornare la tabella simulazioni
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
+                        console.log('✅ DisplayResults completato');
                     } else {
+                        console.log('❌ Errore nella simulazione:', result.error);
                         alert('Errore nella simulazione: ' + (result.error || 'Errore sconosciuto'));
                     }
                 } catch (error) {
@@ -1116,16 +1248,55 @@
                 return data;
             }
             
+            // Ordina risultati per status (riconosciuti e parziali prima)
+            function sortResultsByStatus(data) {
+                if (!data || !Array.isArray(data)) return data;
+                
+                return data.sort((a, b) => {
+                    const statusA = getLastValue(a);
+                    const statusB = getLastValue(b);
+                    
+                    // Controlla che i valori siano stringhe prima di chiamare toLowerCase
+                    const statusAStr = (statusA && typeof statusA === 'string') ? statusA.toLowerCase() : '';
+                    const statusBStr = (statusB && typeof statusB === 'string') ? statusB.toLowerCase() : '';
+                    
+                    // Priorità: TOT > PARZIALE > NON
+                    const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
+                    const priorityA = priority[statusAStr] || 4;
+                    const priorityB = priority[statusBStr] || 4;
+                    
+                    return priorityA - priorityB;
+                });
+            }
+            
+            // Ottieni l'ultimo valore di un oggetto (per lo status)
+            function getLastValue(obj) {
+                const values = Object.values(obj);
+                return values[values.length - 1] || '';
+            }
+            
             // Mostra risultati
             function displayResults(results) {
+                console.log('📊 Displaying results:', results);
                 const container = document.getElementById('results-container');
                 container.style.display = 'block';
+                
+                // Ordina i risultati: riconosciuti e parziali prima
+                if (results.detail) {
+                    results.detail = sortResultsByStatus(results.detail);
+                }
+                if (results.summary) {
+                    results.summary = sortResultsByStatus(results.summary);
+                }
                 
                 displayTable('detail-table', results.detail, 'detail-pagination');
                 displayTable('summary-table', results.summary, 'summary-pagination');
                 displayTable('leftover-table', results.leftovers, 'leftover-pagination');
                 
-                container.scrollIntoView({ behavior: 'smooth' });
+                // Mostra pulsante salva simulazione
+                document.getElementById('save-simulation-btn').style.display = 'block';
+                
+                console.log('✅ Risultati mostrati senza refresh');
             }
             
             // Mostra tabella con paginazione
@@ -1157,15 +1328,49 @@
                     
                     pageData.forEach(item => {
                         const row = tbody.insertRow();
-                        Object.values(item).forEach(value => {
+                        Object.values(item).forEach((value, index) => {
                             const cell = row.insertCell();
-                            cell.textContent = value || '';
+                            
+                            // Applica stili per stato (ultima colonna)
+                            if (index === Object.keys(item).length - 1 && value && ['tot', 'parziale', 'non'].includes(value.toLowerCase())) {
+                                console.log(`Applicando stile per stato: ${value}`);
+                                const span = document.createElement('span');
+                                span.textContent = value.toUpperCase();
+                                span.className = `stato-${value.toLowerCase()}`;
+                                cell.appendChild(span);
+                            } else {
+                                cell.textContent = value || '';
+                            }
                         });
                     });
                     
-                    // Aggiorna paginazione
+                    // Paginazione migliorata (massimo 5 pulsanti)
                     pagination.innerHTML = '';
-                    for (let i = 1; i <= totalPages; i++) {
+                    
+                    console.log(`Paginazione: pagina ${page} di ${totalPages}`);
+                    
+                    // Pulsante precedente
+                    if (page > 1) {
+                        const prevBtn = document.createElement('button');
+                        prevBtn.textContent = '←';
+                        prevBtn.addEventListener('click', () => {
+                            currentPage = page - 1;
+                            showPage(page - 1);
+                        });
+                        pagination.appendChild(prevBtn);
+                    }
+                    
+                    // Numeri pagina (massimo 5)
+                    let startPage = Math.max(1, page - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+                    
+                    if (endPage - startPage < 4) {
+                        startPage = Math.max(1, endPage - 4);
+                    }
+                    
+                    console.log(`Mostrando pagine da ${startPage} a ${endPage}`);
+                    
+                    for (let i = startPage; i <= endPage; i++) {
                         const button = document.createElement('button');
                         button.textContent = i;
                         button.className = i === page ? 'active' : '';
@@ -1175,16 +1380,138 @@
                         });
                         pagination.appendChild(button);
                     }
+                    
+                    // Pulsante successivo
+                    if (page < totalPages) {
+                        const nextBtn = document.createElement('button');
+                        nextBtn.textContent = '→';
+                        nextBtn.addEventListener('click', () => {
+                            currentPage = page + 1;
+                            showPage(page + 1);
+                        });
+                        pagination.appendChild(nextBtn);
+                    }
                 }
                 
                 showPage(1);
             }
             
-            // Visualizza simulazione
-            function viewSimulation(simulationId) {
-                // Implementare visualizzazione dettagli simulazione
-                alert('Visualizzazione simulazione ' + simulationId + ' - da implementare');
+            // Salva simulazione
+            async function saveSimulation() {
+                if (!currentResults) {
+                    alert('Nessuna simulazione da salvare. Esegui prima una simulazione.');
+                    return;
+                }
+                
+                const saveBtn = document.getElementById('save-simulation-btn');
+                saveBtn.style.display = 'none';
+                
+                // Mostra loading
+                showLoading();
+                
+                try {
+                    const simulationData = {
+                        cdl: currentCdl,
+                        discipline: getDisciplineData(),
+                        saveSimulation: true,
+                        studentId: studentId // Usa l'ID dello studente corrente
+                    };
+                    
+                    // Crea nuova simulazione
+                    const response = await fetch('/api/simulate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(simulationData)
+                    });
+                    const successMessage = 'Simulazione salvata con successo!';
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Nascondi loading
+                        hideLoading();
+                        // Refresh della pagina per mostrare il messaggio di successo dalla sessione
+                        window.location.reload();
+                    } else {
+                        hideLoading();
+                        alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
+                        saveBtn.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Errore salvataggio:', error);
+                    hideLoading();
+                    alert('❌ Errore nel salvataggio della simulazione');
+                    saveBtn.style.display = 'block';
+                }
             }
+            
+            
+            
+            // Variabili per il modale di eliminazione
+            let simulationToDelete = null;
+            
+            // Funzioni per il modale di eliminazione
+            function showDeleteModal(simulationId, cdl, date, cfuRecognized) {
+                simulationToDelete = simulationId;
+                
+                document.getElementById('modal-cdl').textContent = cdl;
+                document.getElementById('modal-date').textContent = date;
+                document.getElementById('modal-cfu-rec').textContent = cfuRecognized;
+                
+                document.getElementById('delete-modal').style.display = 'flex';
+            }
+            
+            function closeDeleteModal(resetSimulationId = true) {
+                document.getElementById('delete-modal').style.display = 'none';
+                if (resetSimulationId) {
+                    simulationToDelete = null;
+                }
+            }
+            
+            async function confirmDeleteSimulation() {
+                if (!simulationToDelete) {
+                    return;
+                }
+                
+                // Chiudi il modale prima di mostrare il loader
+                closeDeleteModal(false);
+                showLoading();
+                
+                try {
+                    const response = await fetch(`/api/simulation/${simulationToDelete}/delete`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        closeDeleteModal(true);
+                        hideLoading();
+                        
+                        // Ricarica la pagina per mostrare il messaggio di successo dalla sessione
+                        window.location.reload();
+                    } else {
+                        hideLoading();
+                        alert('❌ Errore nell\'eliminazione: ' + (result.message || result.error || 'Errore sconosciuto'));
+                    }
+                } catch (error) {
+                    hideLoading();
+                    alert('❌ Errore nell\'eliminazione della simulazione: ' + error.message);
+                }
+            }
+            
+            // Chiudi modale cliccando fuori
+            document.addEventListener('click', function(e) {
+                const modal = document.getElementById('delete-modal');
+                if (e.target === modal) {
+                    closeDeleteModal();
+                }
+            });
             
             // Utility functions
             function showError(elementId, message) {
@@ -1224,5 +1551,6 @@
             function hideLoading() {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
+            
         </script>
 {% endblock %}

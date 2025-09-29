@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -21,6 +22,15 @@ class StudentController extends AbstractController
         $this->checkToken($session);
         
         $student = new StudentProspective();
+        
+        // Carica i corsi di laurea disponibili
+        $cdlRepo = $em->getRepository(\App\Entity\ZcfuCdl::class);
+        $cdlData = $cdlRepo->createQueryBuilder('c')
+            ->select('c.cdl, c.orient')
+            ->orderBy('c.cdl', 'ASC')
+            ->addOrderBy('c.orient', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
         
         if ($request->isMethod('POST')) {
             $currentToken = $session->get('user_token');
@@ -39,20 +49,31 @@ class StudentController extends AbstractController
             $em->persist($student);
             $em->flush();
             
-            // Log del cambio token per nuovo studente
-            $this->logTokenChange($em, $student->getId(), null, $currentToken);
+            // Log dell'azione create
+            $this->logStudentAction($em, $student->getId(), $currentToken, 'create');
+            
+            // Controlla se è una richiesta AJAX
+            if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
+                $session->set('success_message', '✅ Studente creato con successo!');
+                return $this->json([
+                    'success' => true,
+                    'studentId' => $student->getId(),
+                    'message' => 'Studente creato con successo'
+                ]);
+            }
             
             $session->set('success_message', 'Studente creato con successo');
             return $this->redirectToRoute('app_student_show', ['id' => $student->getId()]);
         }
         
         return $this->render('student/new.html.twig', [
-            'student' => $student
+            'student' => $student,
+            'cdlOptions' => $cdlData
         ]);
     }
     
     #[Route('/student/{id}', name: 'app_student_show', requirements: ['id' => '\d+'])]
-    public function show(int $id, EntityManagerInterface $em, SessionInterface $session): Response
+    public function show(int $id, EntityManagerInterface $em, SessionInterface $session, Request $request): Response
     {
         $this->checkToken($session);
         
@@ -71,9 +92,26 @@ class StudentController extends AbstractController
             ->getQuery()
             ->getResult();
         
+        // Carica i corsi di laurea disponibili per il simulatore
+        $cdlRepo = $em->getRepository(\App\Entity\ZcfuCdl::class);
+        $cdlData = $cdlRepo->createQueryBuilder('c')
+            ->select('c.cdl, c.orient')
+            ->orderBy('c.cdl', 'ASC')
+            ->addOrderBy('c.orient', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+        
+        // Ottieni il messaggio di successo dalla sessione per mostrarlo
+        $sessionSuccessMessage = $session->get('success_message');
+        if ($sessionSuccessMessage) {
+            $session->remove('success_message'); // Rimuovi il messaggio dopo averlo ottenuto
+        }
+        
         return $this->render('student/show.html.twig', [
             'student' => $student,
-            'simulations' => $simulations
+            'simulations' => $simulations,
+            'cdlOptions' => $cdlData,
+            'successMessage' => $sessionSuccessMessage
         ]);
     }
     
@@ -105,6 +143,9 @@ class StudentController extends AbstractController
             
             $em->flush();
             
+            // Log dell'azione edit
+            $this->logStudentAction($em, $student->getId(), $currentToken, 'edit');
+            
             // Log del cambio token se è diverso
             if ($oldToken !== $currentToken) {
                 $this->logTokenChange($em, $student->getId(), $oldToken, $currentToken);
@@ -130,6 +171,10 @@ class StudentController extends AbstractController
             throw $this->createNotFoundException('Studente non trovato');
         }
         
+        // Log dell'azione deleted prima di eliminare
+        $currentToken = $session->get('user_token');
+        $this->logStudentAction($em, $student->getId(), $currentToken, 'deleted');
+        
         $em->remove($student);
         $em->flush();
         
@@ -152,8 +197,22 @@ class StudentController extends AbstractController
     {
         $log = new StudentManagement();
         $log->setStudentId($studentId);
-        $log->setFromToken($fromToken);
-        $log->setToToken($toToken);
+        $log->setCurrentToken($toToken);
+        $log->setToToken($fromToken);
+        $log->setAction('user_changed');
+        $log->setModifiedAt(new \DateTime());
+        
+        $em->persist($log);
+        $em->flush();
+    }
+    
+    private function logStudentAction(EntityManagerInterface $em, int $studentId, string $currentToken, string $action, ?int $simulationId = null): void
+    {
+        $log = new StudentManagement();
+        $log->setStudentId($studentId);
+        $log->setCurrentToken($currentToken);
+        $log->setAction($action);
+        $log->setSimulationId($simulationId);
         $log->setModifiedAt(new \DateTime());
         
         $em->persist($log);

@@ -84,15 +84,26 @@ class CfuSimulatorService
         
         // Carica TUTTE le offerte (non solo per CDL specifico)
         $offertaRepo = $this->em->getRepository(ZcfuOfferta::class);
-        $offertaData = $offertaRepo->createQueryBuilder('o')
+        $offertaEntities = $offertaRepo->createQueryBuilder('o')
+            ->where('o.cdl = :cdl')
+            ->setParameter('cdl', $cdl)
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
 
         $this->offerta = [];
-        foreach ($offertaData as $off) {
-            if ($off['CDL'] === $cdl) {
-                $this->offerta[$off['OFF_ID']] = $off;
-            }
+        foreach ($offertaEntities as $off) {
+            $this->offerta[$off->getOffId()] = [
+                'OFF_ID' => $off->getOffId(),
+                'ORI_ID' => $off->getOriId(),
+                'DIS_ID' => $off->getDisId(),
+                'rosa' => $off->getRosa(),
+                'maxCFU' => $off->getMaxCFU(),
+                'TAF' => $off->getTaf(),
+                'CFU' => $off->getCfu(),
+                'ANNO' => $off->getAnno(),
+                'AA' => $off->getAa(),
+                'CDL' => $off->getCdl()
+            ];
         }
         
         if (empty($this->offerta)) {
@@ -101,37 +112,45 @@ class CfuSimulatorService
 
         // Carica TUTTE le regole
         $regoleRepo = $this->em->getRepository(ZcfuRegole::class);
-        $regoleData = $regoleRepo->createQueryBuilder('r')
+        $regoleEntities = $regoleRepo->createQueryBuilder('r')
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
 
         $this->regole = [];
-        foreach ($regoleData as $reg) {
-            $this->regole[$reg['ID_off']][$reg['ID_ric']] = $reg['priorita'];
+        foreach ($regoleEntities as $reg) {
+            $this->regole[$reg->getIdOff()][$reg->getIdRic()] = $reg->getPriorita();
         }
 
         // Carica TUTTI i riconoscibili (non solo per CDL specifico)
         $riconoscibiliRepo = $this->em->getRepository(ZcfuRiconoscibile::class);
-        $riconoscibiliData = $riconoscibiliRepo->createQueryBuilder('r')
+        $riconoscibiliEntities = $riconoscibiliRepo->createQueryBuilder('r')
+            ->where('r.cdl = :cdl')
+            ->setParameter('cdl', $cdl)
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
 
         $this->riconoscibili = [];
-        foreach ($riconoscibiliData as $ric) {
-            if ($ric['CDL'] === $cdl) {
-                $this->riconoscibili[$ric['ID_ric']] = $ric;
-            }
+        foreach ($riconoscibiliEntities as $ric) {
+            $this->riconoscibili[$ric->getIdRic()] = [
+                'ID_ric' => $ric->getIdRic(),
+                'riconoscibile' => $ric->getRiconoscibile(),
+                'CDL' => $ric->getCdl()
+            ];
         }
 
         // Carica TUTTE le discipline
         $disRepo = $this->em->getRepository(ZcfuDis::class);
-        $disData = $disRepo->createQueryBuilder('d')
+        $disEntities = $disRepo->createQueryBuilder('d')
             ->getQuery()
-            ->getArrayResult();
+            ->getResult();
 
         $this->discipline = [];
-        foreach ($disData as $dis) {
-            $this->discipline[$dis['DIS_ID']] = $dis;
+        foreach ($disEntities as $dis) {
+            $this->discipline[$dis->getDisId()] = [
+                'DIS_ID' => $dis->getDisId(),
+                'disciplina' => $dis->getDisciplina(),
+                'ssd' => $dis->getSsd()
+            ];
         }
     }
 
