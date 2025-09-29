@@ -3,10 +3,6 @@
 {% block title %}Nuovo Studente - Simulatore CFU UniMarconi{% endblock %}
 
         {% block styles %}
-                <!-- jQuery e Select2 -->
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-                <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         .form-container {
             max-width: 600px;
             margin: 0 auto;
@@ -431,45 +427,26 @@
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
-                let retryCount = 0;
-                const maxRetries = 50; // Massimo 5 secondi (50 * 100ms)
+                console.log('🚀 Inizializzazione simulatore...');
+                console.log('jQuery disponibile:', typeof $ !== 'undefined');
+                console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
                 
-                // Aspetta che jQuery sia caricato
-                function waitForJQueryAndInit() {
-                    retryCount++;
-                    
-                    if (typeof $ !== 'undefined' && $.fn.select2) {
-                        console.log('✅ jQuery e Select2 disponibili, inizializzo...');
-                        loadCdlOptions();
-                        addDisciplineRow(); // Riga 1
-                        addDisciplineRow(); // Riga 2
-                        addDisciplineRow(); // Riga 3 - Solo per grafica
-                        
-                        // Event listeners
-                        document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
-                        document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
-                        document.getElementById('simulate-btn').addEventListener('click', simulate);
-                    } else if (retryCount < maxRetries) {
-                        console.log(`⏳ Aspetto jQuery/Select2... (tentativo ${retryCount}/${maxRetries})`);
-                        setTimeout(waitForJQueryAndInit, 100);
-                    } else {
-                        console.error('❌ Timeout: jQuery/Select2 non caricati dopo 5 secondi');
-                        console.log('🔧 Inizializzo senza Select2...');
-                        
-                        // Fallback: inizializza senza Select2
-                        loadCdlOptionsFallback();
-                        addDisciplineRow(); // Riga 1
-                        addDisciplineRow(); // Riga 2
-                        addDisciplineRow(); // Riga 3 - Solo per grafica
-                        
-                        // Event listeners
-                        document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
-                        document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
-                        document.getElementById('simulate-btn').addEventListener('click', simulate);
-                    }
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    console.log('✅ jQuery e Select2 disponibili, inizializzo...');
+                    loadCdlOptions();
+                } else {
+                    console.log('⚠️ jQuery/Select2 non disponibili, uso fallback...');
+                    loadCdlOptionsFallback();
                 }
                 
-                waitForJQueryAndInit();
+                addDisciplineRow(); // Riga 1
+                addDisciplineRow(); // Riga 2
+                addDisciplineRow(); // Riga 3 - Solo per grafica
+                
+                // Event listeners
+                document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
+                document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
+                document.getElementById('simulate-btn').addEventListener('click', simulate);
             });
             
             // Carica opzioni CDL (fallback senza Select2)

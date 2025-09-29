@@ -6,6 +6,10 @@
     <title>{% block title %}Simulatore CFU UniMarconi{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jQuery e Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -360,6 +364,12 @@
             </footer>
             
             <script>
+                // Debug jQuery/Select2
+                console.log('🔍 Debug librerie:');
+                console.log('jQuery disponibile:', typeof $ !== 'undefined');
+                console.log('jQuery versione:', typeof $ !== 'undefined' ? $.fn.jquery : 'N/A');
+                console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
+                
                 // Menu hamburger
                 document.getElementById('hamburger').addEventListener('click', function() {
                     const navMenu = document.getElementById('navMenu');
