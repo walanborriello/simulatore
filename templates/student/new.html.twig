@@ -2,7 +2,11 @@
 
 {% block title %}Nuovo Studente - Simulatore CFU UniMarconi{% endblock %}
 
-{% block styles %}
+        {% block styles %}
+                <!-- jQuery e Select2 -->
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+                <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         .form-container {
             max-width: 600px;
             margin: 0 auto;
@@ -394,12 +398,12 @@
             // Variabili globali
             let disciplineCount = 0;
             let currentCdl = '';
-            let ssdOptions = [];
+            let allData = null; // Dati precaricati
             let currentResults = null;
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
-                loadCdlOptions();
+                loadAllData();
                 addDisciplineRow(); // Minimo 1 riga
                 
                 // Event listeners
@@ -408,26 +412,38 @@
                 document.getElementById('simulate-btn').addEventListener('click', simulate);
             });
             
-            // Carica opzioni CDL
-            async function loadCdlOptions() {
+            // Carica TUTTI i dati preventivamente
+            async function loadAllData() {
+                showLoading();
                 try {
-                    const response = await fetch('/api/cdl');
-                    const cdlData = await response.json();
+                    const response = await fetch('/api/load-all-data');
+                    allData = await response.json();
                     
+                    // Popola CDL
                     const select = document.getElementById('simulator-cdl');
-                    cdlData.forEach(cdl => {
+                    allData.cdl.forEach(cdl => {
                         const option = document.createElement('option');
                         option.value = cdl.id;
                         option.textContent = cdl.text;
                         select.appendChild(option);
                     });
+                    
+                    // Inizializza Select2 per CDL
+                    $('#simulator-cdl').select2({
+                        placeholder: 'Seleziona corso di laurea...',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                    
                 } catch (error) {
-                    console.error('Errore nel caricamento CDL:', error);
+                    console.error('Errore nel caricamento dati:', error);
+                } finally {
+                    hideLoading();
                 }
             }
             
             // Gestisce cambio CDL
-            async function handleCdlChange() {
+            function handleCdlChange() {
                 const cdlSelect = document.getElementById('simulator-cdl');
                 const disciplineSection = document.getElementById('discipline-section');
                 
@@ -435,13 +451,15 @@
                 
                 if (currentCdl) {
                     disciplineSection.style.display = 'block';
-                    await loadSsdOptions(currentCdl);
+                    
+                    // Usa dati precaricati (nessun loading necessario)
+                    const ssdOptions = allData.ssd[currentCdl] || [];
                     
                     if (ssdOptions.length === 0) {
                         showNoSsdMessage();
                     } else {
                         hideNoSsdMessage();
-                        populateAllSsdSelects();
+                        populateAllSsdSelects(ssdOptions);
                     }
                     
                     // Scroll lento verso la sezione discipline
@@ -453,35 +471,29 @@
                 clearError('cdl-error');
             }
             
-            // Carica opzioni SSD per CDL
-            async function loadSsdOptions(cdl) {
-                try {
-                    const response = await fetch(`/api/ssd/${cdl}`);
-                    const ssdData = await response.json();
-                    ssdOptions = ssdData || [];
-                    console.log(`SSD caricati per ${cdl}:`, ssdOptions.length);
-                } catch (error) {
-                    console.error('Errore nel caricamento SSD:', error);
-                    ssdOptions = [];
-                }
-            }
-            
             // Popola tutte le select SSD
-            function populateAllSsdSelects() {
+            function populateAllSsdSelects(ssdOptions) {
                 const ssdSelects = document.querySelectorAll('.ssd-select');
                 ssdSelects.forEach(select => {
-                    populateSsdSelect(select);
+                    populateSsdSelect(select, ssdOptions);
                 });
             }
             
             // Popola una select SSD
-            function populateSsdSelect(select) {
+            function populateSsdSelect(select, ssdOptions) {
                 select.innerHTML = '<option value="">Seleziona SSD...</option>';
                 ssdOptions.forEach(ssd => {
                     const option = document.createElement('option');
                     option.value = ssd.id;
                     option.textContent = ssd.text;
                     select.appendChild(option);
+                });
+                
+                // Inizializza Select2 per questa select
+                $(select).select2({
+                    placeholder: 'Seleziona SSD...',
+                    allowClear: true,
+                    width: '100%'
                 });
             }
             
@@ -552,11 +564,11 @@
                 
                 container.appendChild(row);
                 
-                // Popola la select SSD se ci sono opzioni disponibili
-                if (ssdOptions.length > 0) {
-                    const select = row.querySelector('.ssd-select');
-                    populateSsdSelect(select);
-                }
+                        // Popola la select SSD se ci sono opzioni disponibili
+                        if (allData && allData.ssd[currentCdl] && allData.ssd[currentCdl].length > 0) {
+                            const select = row.querySelector('.ssd-select');
+                            populateSsdSelect(select, allData.ssd[currentCdl]);
+                        }
                 
                 // Event listeners per validazione
                 const inputs = row.querySelectorAll('input');

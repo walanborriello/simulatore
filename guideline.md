@@ -478,6 +478,7 @@ php bin/console doctrine:fixtures:load  # solo dopo import schema.sql
 -   Validazione lato client solo al click "Calcola simulazione";
     messaggi specifici per campo.\
 -   Righe dinamiche (min 3 iniziali + add/remove).\
+-   Utilizza gli events di select2 e non quelli standard javascript altrimenti non noterà la change.
 
 ------------------------------------------------------------------------
 

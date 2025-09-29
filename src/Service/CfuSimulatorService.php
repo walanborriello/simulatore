@@ -76,20 +76,22 @@ class CfuSimulatorService
 
     private function loadDataInMemory(string $cdl): void
     {
-        // Carica offerta per CDL
+        // Carica TUTTI i dati in memoria per performance (caricamento preventivo)
+        
+        // Carica TUTTE le offerte (non solo per CDL specifico)
         $offertaRepo = $this->em->getRepository(ZcfuOfferta::class);
         $offertaData = $offertaRepo->createQueryBuilder('o')
-            ->where('o.cdl = :cdl')
-            ->setParameter('cdl', $cdl)
             ->getQuery()
             ->getArrayResult();
 
         $this->offerta = [];
         foreach ($offertaData as $off) {
-            $this->offerta[$off['OFF_ID']] = $off;
+            if ($off['CDL'] === $cdl) {
+                $this->offerta[$off['OFF_ID']] = $off;
+            }
         }
 
-        // Carica regole
+        // Carica TUTTE le regole
         $regoleRepo = $this->em->getRepository(ZcfuRegole::class);
         $regoleData = $regoleRepo->createQueryBuilder('r')
             ->getQuery()
@@ -100,20 +102,20 @@ class CfuSimulatorService
             $this->regole[$reg['ID_off']][$reg['ID_ric']] = $reg['priorita'];
         }
 
-        // Carica riconoscibili
+        // Carica TUTTI i riconoscibili (non solo per CDL specifico)
         $riconoscibiliRepo = $this->em->getRepository(ZcfuRiconoscibile::class);
         $riconoscibiliData = $riconoscibiliRepo->createQueryBuilder('r')
-            ->where('r.cdl = :cdl')
-            ->setParameter('cdl', $cdl)
             ->getQuery()
             ->getArrayResult();
 
         $this->riconoscibili = [];
         foreach ($riconoscibiliData as $ric) {
-            $this->riconoscibili[$ric['ID_ric']] = $ric;
+            if ($ric['CDL'] === $cdl) {
+                $this->riconoscibili[$ric['ID_ric']] = $ric;
+            }
         }
 
-        // Carica discipline
+        // Carica TUTTE le discipline
         $disRepo = $this->em->getRepository(ZcfuDis::class);
         $disData = $disRepo->createQueryBuilder('d')
             ->getQuery()
