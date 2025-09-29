@@ -31,8 +31,12 @@ class CfuSimulatorService
             throw new \InvalidArgumentException('CDL e discipline sono obbligatori');
         }
 
-        // Carica dati in memoria per performance
-        $this->loadDataInMemory($cdl);
+        try {
+            // Carica dati in memoria per performance
+            $this->loadDataInMemory($cdl);
+        } catch (\Exception $e) {
+            throw new \Exception("Errore nel caricamento dati per CDL {$cdl}: " . $e->getMessage());
+        }
 
         // Inizializza array per l'algoritmo
         $needed = [];
@@ -89,6 +93,10 @@ class CfuSimulatorService
             if ($off['CDL'] === $cdl) {
                 $this->offerta[$off['OFF_ID']] = $off;
             }
+        }
+        
+        if (empty($this->offerta)) {
+            throw new \Exception("Nessuna offerta trovata per CDL: {$cdl}");
         }
 
         // Carica TUTTE le regole

@@ -61,7 +61,8 @@ class SimulatoreController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'error' => 'Errore durante la simulazione',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
