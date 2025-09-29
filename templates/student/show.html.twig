@@ -611,8 +611,13 @@
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
+                let retryCount = 0;
+                const maxRetries = 50; // Massimo 5 secondi (50 * 100ms)
+                
                 // Aspetta che jQuery sia caricato
                 function waitForJQueryAndInit() {
+                    retryCount++;
+                    
                     if (typeof $ !== 'undefined' && $.fn.select2) {
                         console.log('✅ jQuery e Select2 disponibili, inizializzo...');
                         loadCdlOptions();
@@ -625,9 +630,24 @@
                         document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
                         document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
                         document.getElementById('simulate-btn').addEventListener('click', simulate);
-                    } else {
-                        console.log('⏳ Aspetto jQuery/Select2...');
+                    } else if (retryCount < maxRetries) {
+                        console.log(`⏳ Aspetto jQuery/Select2... (tentativo ${retryCount}/${maxRetries})`);
                         setTimeout(waitForJQueryAndInit, 100);
+                    } else {
+                        console.error('❌ Timeout: jQuery/Select2 non caricati dopo 5 secondi');
+                        console.log('🔧 Inizializzo senza Select2...');
+                        
+                        // Fallback: inizializza senza Select2
+                        loadCdlOptionsFallback();
+                        addDisciplineRow(); // Riga 1
+                        addDisciplineRow(); // Riga 2
+                        addDisciplineRow(); // Riga 3 - Solo per grafica
+                        
+                        // Event listeners
+                        document.getElementById('toggle-simulator').addEventListener('click', toggleSimulator);
+                        document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
+                        document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
+                        document.getElementById('simulate-btn').addEventListener('click', simulate);
                     }
                 }
                 
@@ -646,6 +666,28 @@
                 } else {
                     container.style.display = 'none';
                     button.textContent = '🎓 Simulatore';
+                }
+            }
+            
+            // Carica opzioni CDL (fallback senza Select2)
+            async function loadCdlOptionsFallback() {
+                try {
+                    const response = await fetch('/api/cdl');
+                    const cdlData = await response.json();
+                    
+                    const select = document.getElementById('simulator-cdl');
+                    select.innerHTML = '<option value="">Seleziona corso di laurea...</option>';
+                    
+                    cdlData.forEach(cdl => {
+                        const option = document.createElement('option');
+                        option.value = cdl.id;
+                        option.textContent = cdl.text;
+                        select.appendChild(option);
+                    });
+                    
+                    console.log('✅ CDL caricati senza Select2');
+                } catch (error) {
+                    console.error('❌ Errore caricamento CDL:', error);
                 }
             }
             
@@ -780,47 +822,49 @@
                 console.log('jQuery disponibile per SSD:', typeof $ !== 'undefined');
                 console.log('Select2 disponibile per SSD:', typeof $ !== 'undefined' && $.fn.select2);
                 
-                // Aspetta che jQuery sia disponibile
-                function initSelect2SSD() {
-                    if (typeof $ !== 'undefined' && $.fn.select2) {
-                        try {
-                            $(select).select2('destroy');
-                        } catch(e) {
-                            console.log('Select2 SSD non era inizializzato, procedo con creazione');
-                        }
-                        
-                        $(select).select2({
-                            placeholder: 'Seleziona SSD...',
-                            allowClear: true,
-                            width: '100%',
-                            minimumResultsForSearch: 1, // Mostra search box sempre
-                            language: {
-                                noResults: function() {
-                                    return "Nessun risultato trovato";
-                                },
-                                searching: function() {
-                                    return "Ricerca in corso...";
-                                }
-                            }
-                        });
-                        
-                        // Forza la creazione della search box per SSD
-                        setTimeout(function() {
-                            const searchContainer = $('.select2-search');
-                            if (searchContainer.length === 0) {
-                                console.log('🔧 Forzando creazione search box per SSD...');
-                                $('.select2-dropdown').prepend('<div class="select2-search select2-search--dropdown"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" aria-autocomplete="list" placeholder="Cerca SSD..."></div>');
-                            }
-                        }, 100);
-                        
-                        console.log('✅ Select2 ricostruito per SSD con search box');
-                    } else {
-                        console.log('⏳ jQuery/Select2 non ancora caricati, riprovo tra 100ms...');
-                        setTimeout(initSelect2SSD, 100);
+                // Prova con Select2, fallback a select normale
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    try {
+                        $(select).select2('destroy');
+                    } catch(e) {
+                        console.log('Select2 SSD non era inizializzato, procedo con creazione');
                     }
+                    
+                    $(select).select2({
+                        placeholder: 'Seleziona SSD...',
+                        allowClear: true,
+                        width: '100%',
+                        minimumResultsForSearch: 1, // Mostra search box sempre
+                        language: {
+                            noResults: function() {
+                                return "Nessun risultato trovato";
+                            },
+                            searching: function() {
+                                return "Ricerca in corso...";
+                            }
+                        }
+                    });
+                    
+                    // Forza la creazione della search box per SSD
+                    setTimeout(function() {
+                        const searchContainer = $('.select2-search');
+                        if (searchContainer.length === 0) {
+                            console.log('🔧 Forzando creazione search box per SSD...');
+                            $('.select2-dropdown').prepend('<div class="select2-search select2-search--dropdown"><input class="select2-search__field" type="search" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" aria-autocomplete="list" placeholder="Cerca SSD..."></div>');
+                        }
+                    }, 100);
+                    
+                    console.log('✅ Select2 ricostruito per SSD con search box');
+                } else {
+                    console.log('⚠️ Select2 non disponibile, uso select normale per SSD');
+                    select.innerHTML = '<option value="">Seleziona SSD...</option>';
+                    ssdOptions.forEach(ssd => {
+                        const option = document.createElement('option');
+                        option.value = ssd.id;
+                        option.textContent = ssd.text;
+                        select.appendChild(option);
+                    });
                 }
-                
-                initSelect2SSD();
             }
             
             // Mostra messaggio nessun SSD disponibile
