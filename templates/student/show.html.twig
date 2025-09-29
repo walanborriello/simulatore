@@ -625,7 +625,19 @@
                 
                 // Event listeners
                 document.getElementById('toggle-simulator').addEventListener('click', toggleSimulator);
-                document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
+                
+                const cdlSelect = document.getElementById('simulator-cdl');
+                console.log('🔗 Attaccando event listener a CDL select:', cdlSelect);
+                
+                // Usa l'evento Select2 se disponibile, altrimenti evento standard
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $(cdlSelect).on('change', handleCdlChange);
+                    console.log('✅ Event listener Select2 attaccato');
+                } else {
+                    cdlSelect.addEventListener('change', handleCdlChange);
+                    console.log('✅ Event listener standard attaccato');
+                }
+                
                 document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
                 document.getElementById('simulate-btn').addEventListener('click', simulate);
             });
@@ -733,10 +745,12 @@
             
             // Gestisce cambio CDL
             async function handleCdlChange() {
+                console.log('🎯 handleCdlChange chiamata!');
                 const cdlSelect = document.getElementById('simulator-cdl');
                 const disciplineSection = document.getElementById('discipline-section');
                 
                 currentCdl = cdlSelect.value;
+                console.log('📋 CDL selezionato:', currentCdl);
                 
                 if (currentCdl) {
                     disciplineSection.style.display = 'block';
