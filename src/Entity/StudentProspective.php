@@ -55,6 +55,9 @@ class StudentProspective
     #[ORM\Column(type: 'datetime')]
     private \DateTime $updatedAt;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $managedBy = null;
+
 
     public function __construct()
     {
@@ -198,6 +201,17 @@ class StudentProspective
                 $simulation->setStudent(null);
             }
         }
+        return $this;
+    }
+
+    public function getManagedBy(): ?string
+    {
+        return $this->managedBy;
+    }
+
+    public function setManagedBy(?string $managedBy): self
+    {
+        $this->managedBy = $managedBy;
         return $this;
     }
 

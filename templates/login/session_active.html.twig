@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessione Attiva - Simulatore CFU UniMarconi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
+            min-height: 100vh;
+            color: #444444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #379975, #E57552);
+        }
+        
+        .warning-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #ffc107;
+        }
+        
+        h1 {
+            color: #E57552;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .token-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #379975;
+        }
+        
+        .token-current {
+            color: #379975;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .token-new {
+            color: #E57552;
+            font-weight: 600;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #379975;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2d7a5f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(55, 153, 117, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .message {
+                font-size: 16px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="warning-icon">⚠️</div>
+        <h1>Sessione Già Attiva</h1>
+        <p class="message">
+            Hai già una sessione attiva con un token diverso. Per accedere con un nuovo token, devi prima disconnetterti dalla sessione corrente.
+        </p>
+        
+        <div class="token-info">
+            <div class="token-current">Token attuale: <strong>{{ currentToken }}</strong></div>
+            <div class="token-new">Nuovo token: <strong>{{ newToken }}</strong></div>
+        </div>
+        
+        <div class="actions">
+            <a href="/logout?redirect=/login?token={{ newToken }}" class="btn btn-primary">Disconnetti e Accedi con Nuovo Token</a>
+            <a href="/" class="btn btn-secondary">Torna alla Homepage</a>
+        </div>
+    </div>
+</body>
+</html>

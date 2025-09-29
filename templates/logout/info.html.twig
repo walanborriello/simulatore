@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout - Simulatore CFU UniMarconi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logout-container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 500px;
+        }
+        h1 {
+            color: #E57552;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #444444;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border: 2px solid #379975;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .btn {
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1.1em;
+        }
+        .btn-primary {
+            background-color: #379975;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2d7a5f;
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-container">
+        <h1>Logout Completato</h1>
+        <p>Sei stato disconnesso con successo dal sistema.</p>
+        
+        <div class="info-box">
+            <h3 style="color: #379975; margin-top: 0;">ℹ️ Informazioni per l'accesso</h3>
+            <p style="margin-bottom: 0;">
+                Per accedere nuovamente al sistema, è necessario un <strong>token valido</strong>.<br>
+                Contatta l'amministratore per ottenere un nuovo token di accesso.
+            </p>
+        </div>
+        
+        <a href="/" class="btn btn-primary">Torna alla Homepage</a>
+    </div>
+</body>
+</html>

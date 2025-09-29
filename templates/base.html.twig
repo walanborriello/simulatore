@@ -1,150 +1,412 @@
 <!DOCTYPE html>
 <html lang="it">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{% block title %}Simulatore CFU UniMarconi{% endblock %}</title>
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-        {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
-            <style>
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
-                
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    background: linear-gradient(0deg, #379975 40px, #FFF 0%);
-                    min-height: 100vh;
-                    color: #444444;
-                }
-                
-                .container {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }
-                
-                header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                }
-                
-                .logo {
-                    max-width: 200px;
-                    height: auto;
-                    margin-bottom: 20px;
-                }
-                
-                h1 {
-                    color: #E57552;
-                    font-size: 2.5rem;
-                    margin-bottom: 10px;
-                }
-                
-                h2 {
-                    color: #E57552;
-                    font-size: 1.8rem;
-                    margin-bottom: 30px;
-                }
-                
-                .status-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 40px;
-                }
-                
-                .status-card {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    border-left: 4px solid #379975;
-                }
-                
-                .status-card h3 {
-                    color: #379975;
-                    margin-bottom: 10px;
-                }
-                
-                .status-card p {
-                    margin-bottom: 8px;
-                }
-                
-                .status-card a {
-                    color: #379975;
-                    text-decoration: none;
-                }
-                
-                .status-card a:hover {
-                    text-decoration: underline;
-                }
-                
-                .phase-info {
-                    background: white;
-                    padding: 30px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    text-align: center;
-                }
-                
-                .phase-info h3 {
-                    color: #E57552;
-                    font-size: 1.5rem;
-                    margin-bottom: 15px;
-                }
-                
-                .phase-info p {
-                    margin-bottom: 10px;
-                }
-                
-                .timestamp {
-                    color: #666;
-                    font-size: 0.9rem;
-                    margin-top: 20px;
-                }
-                
-                footer {
-                    background: #444444;
-                    color: white;
-                    text-align: center;
-                    padding: 20px;
-                    margin-top: 40px;
-                }
-                
-                .success {
-                    color: #28a745;
-                    font-weight: bold;
-                }
-                
-                @media (max-width: 768px) {
-                    h1 {
-                        font-size: 2rem;
-                    }
-                    
-                    h2 {
-                        font-size: 1.5rem;
-                    }
-                    
-                    .container {
-                        padding: 10px;
-                    }
-                }
-            </style>
-        {% endblock %}
-
-        {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-        {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Simulatore CFU UniMarconi{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        <footer>
-            <p>&copy; 2025 Simulatore CFU UniMarconi - Strumento per Segreteria</p>
-        </footer>
-    </body>
-</html>
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: #444444;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 130px;
+            position: relative;
+            z-index: 1000;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            height: 100%;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 80%;
+            gap: 20px;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background-color: #444444;
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+        
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .nav-menu.active {
+            display: flex;
+        }
+        
+        .logo-link {
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-link:hover {
+            transform: scale(1.05);
+        }
+        
+        .logo {
+            height: 60px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 4px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            height: 44px;
+            box-sizing: border-box;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            cursor: pointer;
+        }
+        
+        .main-content {
+            padding: 0 20px 40px 20px;
+        }
+        
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .main-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #379975, #E57552);
+        }
+        
+        h1 {
+            color: #E57552;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        p {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        a {
+            color: #E57552;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .breadcrumb {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #379975;
+        }
+        
+        .breadcrumb a:hover {
+            color: #E57552;
+        }
+        
+        /* Messaggi di successo/errore migliorati */
+        .alert {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 5px solid;
+            font-weight: 500;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border-left-color: #28a745;
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .footer {
+            background-color: #444444;
+            color: #fff;
+            padding: 30px 0;
+            margin-top: 40px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
+        
+        .footer p {
+            margin: 0;
+            font-size: 14px;
+            color: #fff;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                height: auto;
+                min-height: 130px;
+                margin-bottom: 15px;
+            }
+            
+            .header-content {
+                flex-direction: row;
+                justify-content: space-between;
+                height: 80%;
+                padding: 10px 0;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+            
+            .nav-menu.active {
+                display: flex;
+            }
+            
+            .main-container {
+                padding: 20px;
+                margin: 0;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .container {
+                padding: 15px 20px;
+            }
+            
+            .footer {
+                padding: 20px 0;
+            }
+            
+            .footer-content {
+                padding: 15px 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                min-height: 130px;
+            }
+            
+            .header-content {
+                height: 80%;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .main-container {
+                padding: 15px;
+            }
+            
+            .container {
+                padding: 15px 20px;
+            }
+            
+            .footer-content {
+                padding: 15px 20px;
+            }
+        }
+        
+        {% block styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo-link">
+                    <img src="/logo.png" alt="Logo UniMarconi" class="logo">
+                </a>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="nav-menu" id="navMenu">
+                    <a href="/logout" class="btn btn-secondary">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="main-container">
+                    {% if app.session.get('success_message') %}
+                        <div class="alert alert-success" data-message-type="success">
+                            {{ app.session.get('success_message') }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if app.session.get('error_message') %}
+                        <div class="alert alert-error" data-message-type="error">
+                            {{ app.session.get('error_message') }}
+                        </div>
+                    {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+            <footer class="footer">
+                <div class="footer-content">
+                    <p>&copy; 2024 Simulatore CFU UniMarconi. Tutti i diritti riservati.</p>
+                </div>
+            </footer>
+            
+            <script>
+                // Menu hamburger
+                document.getElementById('hamburger').addEventListener('click', function() {
+                    const navMenu = document.getElementById('navMenu');
+                    navMenu.classList.toggle('active');
+                });
+                
+                // Chiude il menu quando si clicca fuori
+                document.addEventListener('click', function(event) {
+                    const hamburger = document.getElementById('hamburger');
+                    const navMenu = document.getElementById('navMenu');
+                    
+                    if (!hamburger.contains(event.target) && !navMenu.contains(event.target)) {
+                        navMenu.classList.remove('active');
+                    }
+                });
+                
+                // Rimuove immediatamente i messaggi dalla sessione quando vengono mostrati
+                const successMsg = document.querySelector('.alert-success');
+                const errorMsg = document.querySelector('.alert-error');
+                
+                if (successMsg || errorMsg) {
+                    // Rimuove i messaggi dalla sessione immediatamente
+                    fetch('/clear-session-message', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                }
+                
+                // Pulisce i messaggi dal DOM dopo 5 secondi
+                setTimeout(function() {
+                    if (successMsg) {
+                        successMsg.style.transition = 'opacity 0.5s, transform 0.5s';
+                        successMsg.style.opacity = '0';
+                        successMsg.style.transform = 'translateY(-20px)';
+                        setTimeout(() => successMsg.remove(), 500);
+                    }
+                    
+                    if (errorMsg) {
+                        errorMsg.style.transition = 'opacity 0.5s, transform 0.5s';
+                        errorMsg.style.opacity = '0';
+                        errorMsg.style.transform = 'translateY(-20px)';
+                        setTimeout(() => errorMsg.remove(), 500);
+                    }
+                }, 5000);
+            </script>
+        </body>
+        </html>

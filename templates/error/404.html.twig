@@ -4,116 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagina Non Trovata - Simulatore CFU UniMarconi</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
-        * {
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #444444;
         }
-        
         .error-container {
+            text-align: center;
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             max-width: 500px;
-            width: 90%;
         }
-        
-        .error-icon {
-            font-size: 4rem;
-            color: #E57552;
-            margin-bottom: 20px;
-        }
-        
         h1 {
             color: #E57552;
+            font-size: 2.5em;
             margin-bottom: 20px;
-            font-size: 1.8rem;
         }
-        
-        .error-message {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            border-left: 4px solid #E57552;
+        p {
+            color: #444444;
+            font-size: 1.2em;
             margin-bottom: 30px;
-            font-size: 1.1rem;
         }
-        
-        .error-details {
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
         .error-code {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
+            font-size: 6em;
             color: #E57552;
             font-weight: bold;
-            margin-top: 20px;
-        }
-        
-        .suggestions {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-top: 20px;
-            text-align: left;
-        }
-        
-        .suggestions h3 {
-            color: #379975;
-            margin-bottom: 10px;
-        }
-        
-        .suggestions ul {
-            margin-left: 20px;
-        }
-        
-        .suggestions li {
-            margin-bottom: 5px;
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="error-container">
-        <div class="error-icon">🔍</div>
+        <div class="error-code">404</div>
         <h1>Pagina Non Trovata</h1>
-        <div class="error-message">
-            La pagina che stai cercando non esiste o è stata spostata.
-        </div>
-        <div class="error-details">
-            <p>Verifica che l'URL sia corretto o prova a navigare dal menu principale.</p>
-        </div>
-        
-        <div class="suggestions">
-            <h3>Possibili soluzioni:</h3>
-            <ul>
-                <li>Controlla l'ortografia dell'URL</li>
-                <li>Torna alla <a href="/" style="color: #379975;">pagina principale</a></li>
-                <li>Verifica di essere autenticato correttamente</li>
-                <li>Contatta l'amministratore se il problema persiste</li>
-            </ul>
-        </div>
-        
-        <div class="error-code">
-            Errore 404 - Not Found
-        </div>
+        <p>La pagina che stai cercando non esiste o è stata spostata.</p>
     </div>
 </body>
 </html>

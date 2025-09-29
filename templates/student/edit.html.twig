@@ -1,97 +1,9 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modifica Studente - Simulatore CFU UniMarconi</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
-            min-height: 100vh;
-            color: #444444;
-        }
-        
-        .header {
-            background: white;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #379975;
-            text-decoration: none;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary {
-            background: #379975;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2d7a5f;
-        }
-        
-        .btn-secondary {
-            background: #E57552;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #d65a3f;
-        }
-        
-        .main-content {
-            padding: 40px 0;
-        }
-        
-        .page-title {
-            color: #E57552;
-            margin-bottom: 30px;
-            font-size: 2rem;
-        }
-        
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifica Studente - Simulatore CFU UniMarconi{% endblock %}
+
+{% block styles %}
         .form-container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             max-width: 600px;
             margin: 0 auto;
         }
@@ -100,129 +12,114 @@
             margin-bottom: 20px;
         }
         
-        .form-group label {
+        label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
-            color: #444;
+            color: #444444;
         }
         
-        .form-group input,
-        .form-group textarea {
+        input, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 4px;
             font-size: 1rem;
-            transition: border-color 0.3s;
         }
         
-        .form-group input:focus,
-        .form-group textarea:focus {
+        input:focus, textarea:focus {
             outline: none;
             border-color: #379975;
-        }
-        
-        .form-group textarea {
-            height: 100px;
-            resize: vertical;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            margin-top: 30px;
+            box-shadow: 0 0 0 2px rgba(55, 153, 117, 0.2);
         }
         
         .required {
-            color: #E57552;
+            color: #dc3545;
         }
         
-        .student-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #379975;
+        .btn-primary {
+            background-color: #379975;
+            color: white;
+            padding: 12px 24px;
+            font-size: 1.1em;
         }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="container">
-            <div class="header-content">
-                <a href="/" class="logo-link">
-                    <img src="{{ asset('logo.png') }}" alt="Logo UniMarconi" class="logo">
-                </a>
-                <div class="user-info">
-                    <span>Segreteria</span>
-                    <a href="/logout" class="btn btn-secondary">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="main-content">
-        <div class="container">
-            <h1 class="page-title">Modifica Studente</h1>
-            
-            <div class="form-container">
-                <div class="student-info">
-                    <strong>ID Studente:</strong> {{ student.id }}<br>
-                    <strong>Creato il:</strong> {{ student.createdAt|date('d/m/Y H:i') }}<br>
-                    <strong>Ultimo aggiornamento:</strong> {{ student.updatedAt|date('d/m/Y H:i') }}
+        
+        .btn-primary:hover {
+            background-color: #2d7a5f;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            font-size: 1.1em;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .form-actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        small {
+            color: #666;
+            font-size: 0.9em;
+        }
+{% endblock %}
+
+{% block content %}
+        <h1>Modifica Studente</h1>
+        
+        <div class="form-container">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="firstName">Nome <span class="required">*</span></label>
+                    <input type="text" id="firstName" name="firstName" value="{{ student.firstName }}" required>
                 </div>
                 
-                <form method="POST">
-                    <div class="form-group">
-                        <label for="firstName">Nome <span class="required">*</span></label>
-                        <input type="text" id="firstName" name="firstName" value="{{ student.firstName }}" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="lastName">Cognome <span class="required">*</span></label>
-                        <input type="text" id="lastName" name="lastName" value="{{ student.lastName }}" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email">Email <span class="required">*</span></label>
-                        <input type="email" id="email" name="email" value="{{ student.email }}" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="codiceFiscale">Codice Fiscale <span class="required">*</span></label>
-                        <input type="text" id="codiceFiscale" name="codiceFiscale" value="{{ student.codiceFiscale }}" maxlength="16" required>
-                        <small style="color: #666; font-size: 0.9rem;">Inserisci il codice fiscale (16 caratteri)</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="ateneoProvenienza">Ateneo di Provenienza <span class="required">*</span></label>
-                        <input type="text" id="ateneoProvenienza" name="ateneoProvenienza" value="{{ student.ateneoProvenienza }}" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="corsoStudioInteresse">Corso di Studio di Interesse <span class="required">*</span></label>
-                        <input type="text" id="corsoStudioInteresse" name="corsoStudioInteresse" value="{{ student.corsoStudioInteresse }}" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="phone">Telefono</label>
-                        <input type="tel" id="phone" name="phone" value="{{ student.phone ?? '' }}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="notes">Note</label>
-                        <textarea id="notes" name="notes" placeholder="Note aggiuntive sullo studente...">{{ student.notes ?? '' }}</textarea>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <a href="/student/{{ student.id }}" class="btn btn-secondary">Annulla</a>
-                        <button type="submit" class="btn btn-primary">Salva Modifiche</button>
-                    </div>
-                </form>
-            </div>
+                <div class="form-group">
+                    <label for="lastName">Cognome <span class="required">*</span></label>
+                    <input type="text" id="lastName" name="lastName" value="{{ student.lastName }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" value="{{ student.email }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="codiceFiscale">Codice Fiscale <span class="required">*</span></label>
+                    <input type="text" id="codiceFiscale" name="codiceFiscale" value="{{ student.codiceFiscale }}" maxlength="16" required>
+                    <small>Inserisci il codice fiscale (16 caratteri)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ateneoProvenienza">Ateneo di Provenienza <span class="required">*</span></label>
+                    <input type="text" id="ateneoProvenienza" name="ateneoProvenienza" value="{{ student.ateneoProvenienza }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="corsoStudioInteresse">Corso di Studio di Interesse <span class="required">*</span></label>
+                    <input type="text" id="corsoStudioInteresse" name="corsoStudioInteresse" value="{{ student.corsoStudioInteresse }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Telefono <span class="required">*</span></label>
+                    <input type="tel" id="phone" name="phone" value="{{ student.phone }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Note</label>
+                    <textarea id="notes" name="notes" rows="4">{{ student.notes }}</textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Aggiorna Studente</button>
+                    <a href="/student/{{ student.id }}" class="btn btn-secondary">Annulla</a>
+                </div>
+            </form>
         </div>
-    </div>
-</body>
-</html>
+{% endblock %}

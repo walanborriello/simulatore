@@ -192,17 +192,19 @@ git push -u origin fase-1-repo-setup
 # 7) FASE 4 --- Login con token + gestione studenti/simulazioni
 
 -   `/login?token=...` obbligatorio → salva `user_token`
-    (`user_role=segretary`) in sessione, altrimenti **403** stilizzata.\
+    (`user_role=segretary`) in sessione e fai redirect in homepage, altrimenti **403** stilizzata.\ 
 -   Homepage `/`: **SOLO** tabella studenti (paginazione 10).\
--   Pagine `newStudent`, `editStudent`, `showStudent` con integrazione
-    simulatore e storico simulazioni (salvataggio con token in
-    sessione + log cambi token).
--   La form deve contenere `nome`, `cognome`, `data di registrazione`, `email` con verifica validazione email, `codice fiscale` con validazione validità e deve essere univoco, `ateneo di provenienza`, `corso di studio di interesse`, `telefono` e questi devono essere tutti campi obbligatori.
+-   Pagine `newStudent`, `editStudent`, `showStudent`. 
+-   In homepage il tasto `aggiungi studente` deve essere posizionato in alto a destra del body.
+-   In homepage devono esserci i filtri della tabella degli studenti che viene mostrata e che ci siano anche i filtri per `nome`, `cognome`, `email`, `codice fiscale` degli studenti e un flag per filtrare solo gli studenti che abbiano il `managedBy` dell'utente loggato e quindi della variabile salvata in sessione `user_token` 
+-   La form deve contenere `nome`, `cognome`, `data di registrazione`, `email` con verifica validazione email, `codice fiscale` con validazione validità e deve essere univoco, `ateneo di provenienza`, `corso di studio di interesse`, `telefono` e questi devono essere tutti campi obbligatori e salvare in `managedBy` il token dell'utente loggato.
+- Nel caso in cui un utente loggato prende in gestione uno studente con token differente allora in fase di salvataggio studente viene aggiornato il campo `managedBy` col nuovo token.
 - Pulsante elimina studente nella tabella in home nella colonna azioni e nel visualizza.
+
 
 *Checklist Fase 4:* - \[ \] Blocco accesso se manca `user_token`\
 - \[ \] CRUD studenti + associazione simulazioni (che verrà implementata in fase 5 quindi non implementare nulla e se lo hai fatto elimina)\
-- \[ \] Log cambio token su simulazioni (che verrà implementata in fase 5 quindi non implementare nulla e se lo hai fatto elimina)
+- \[ \] Tabella a db `students_managements` cambio token su simulazione e/o salvataggio dello studente in fase di modifica o nuova creazione (che verrà implementata in fase 5 quindi non implementare nulla e se lo hai fatto elimina) se chi sta facendo la modifica dello studente ha un token differente da quello associato allo studente
 
 ------------------------------------------------------------------------
 
@@ -250,6 +252,26 @@ JSON coerente\
 Tabelle nuove: `students_prospective`, `simulations`, eventuale
 `simulation_log_token`.
 
+Struttura `students_prospective`
+-   `firstName`
+-   `lastName`
+-   `email`
+-   `phone`
+-   `notes`
+-   `createdAt`
+-   `updatedAt`
+-   `codiceFiscale`
+-   `ateneoProvenienza`
+-   `corsoStudioInteresse`
+-   `managedBy`
+
+Struttura `students_managements`
+-   `id` Autoincrement
+-   `studentId`
+-   `fromToken`
+-   `toToken`
+-   `modifiedAt` currante datetime
+
 ------------------------------------------------------------------------
 
 ## 11) Entità Doctrine consigliate
@@ -284,14 +306,32 @@ Output: `detail`, `summary`, `leftovers`, `simulationId`.
 
 ## 14) Interfaccia e stile (logo & favicon)
 
--   Palette: gradiente `linear-gradient(0deg, #379975 40px, #FFF 0%)`,
-    titoli `#E57552`, testo `#444444`, footer `#444444` (testo bianco).\
+- Grafica accattivante
+- Font family: 'Raleway', sans-serif
+- tag h1: `36px`
+- tag p: `18px`
+- tag a: `#E57552`
+- tag a:hover: sottolineato
+- bottoni hover: cursor pointer
+- breadcrump: `16px`
+- header: background `linear-gradient(0deg, #379975 40px, #FFF 0%)`
+- Gradient primario: `linear-gradient(0deg, #379975 40px, #FFF 0%)`  
+- Titoli: `#E57552`  
+- Colore testo body: `#444444` 
+- Colore bottoni conferma azione: `#379975`  
+- Footer: `#444444` con testo `#fff`  
+- Header e footer generico per tutto il sito
+- Definisci bene gli spazi tra elementi (Non accavallare i componenti grafici). Vorrei un header abbastanza alto che mostri correttamente il logo, ben definito, tieni presente che hai il padding nel background quindi aggiungi il padding all'altezza dell'header e non degli elementi al suo interno.
+Cerca di evitare errori grafici. Il brand-text ben definito che non sia di disturbo anche su mobile che rischia di avere un font-size troppo grande.
+**PER I CAMPI NELLE FORM NON MOSTRARE ALTRI TIPI DI ERRORI**
+- Non modificare la lunghezza delle select.
 -   **Logo:** `logo.png` (dimensione originale, clic → `/`).\
 -   **Favicon:** `favicon.ico` con
     `<link rel="icon" type="image/x-icon" href="/favicon.ico">`.\
--   Responsive: hamburger menu, transizioni scroll.\
+-   **IMPORTANTE** il portale deve essere **ASSOLUTAMENTE** Responsive: hamburger menu, transizioni scroll.\
 -   Errori form: bordo rosso + messaggio sotto campo + scroll al primo
     errore.
+-   header **GENERICO PER TUTTE LE PAGINE DEL SITO** con logo a sinistra cliccabile che ti porti in homepage e a destra il tasto di logout che se cliccato ti fa redirect verso una pagina che ti informa che per loggarsi devi avere un token e che non abbia altre scritte vicino
 
 ------------------------------------------------------------------------
 

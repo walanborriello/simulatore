@@ -3,91 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accesso Negato - Simulatore CFU UniMarconi</title>
+    <title>Accesso Negato - Simulatore CFU</title>
     <style>
-        * {
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #444444;
         }
-        
         .error-container {
+            text-align: center;
             background: white;
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             max-width: 500px;
-            width: 90%;
         }
-        
-        .error-icon {
-            font-size: 4rem;
-            color: #E57552;
-            margin-bottom: 20px;
-        }
-        
         h1 {
             color: #E57552;
+            font-size: 2.5em;
             margin-bottom: 20px;
-            font-size: 1.8rem;
         }
-        
-        .error-message {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            border-left: 4px solid #E57552;
+        p {
+            color: #444444;
+            font-size: 1.2em;
             margin-bottom: 30px;
-            font-size: 1.1rem;
         }
-        
-        .error-details {
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
         .error-code {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
+            font-size: 6em;
             color: #E57552;
             font-weight: bold;
-            margin-top: 20px;
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="error-container">
-        <div class="error-icon">🔒</div>
+        <div class="error-code">403</div>
         <h1>Accesso Negato</h1>
-        <div class="error-message">
-            Non hai i permessi necessari per accedere a questa risorsa.
-        </div>
-        <div class="error-details">
-            <p>Per accedere al sistema è necessario:</p>
-            <ul style="text-align: left; margin: 20px 0;">
-                <li>Un token di autenticazione valido</li>
-                <li>Il ruolo di segreteria</li>
-                <li>Una sessione attiva</li>
-            </ul>
-            <p>Contatta l'amministratore di sistema se ritieni che questo sia un errore.</p>
-        </div>
-        <div class="error-code">
-            Errore 403 - Forbidden
-        </div>
+        <p>Token mancante o non valido. Accesso riservato agli operatori autorizzati.</p>
     </div>
 </body>
 </html>

@@ -1,137 +1,224 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Studenti - Simulatore CFU UniMarconi</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(0deg, #379975 40px, #FFF 0%);
-            min-height: 100vh;
-            color: #444444;
-        }
-        
-        .header {
-            background: white;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .header-content {
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestione Studenti - Simulatore CFU UniMarconi{% endblock %}
+
+{% block styles %}
+        .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
         }
         
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #379975;
-            text-decoration: none;
-        }
-        
-        .user-info {
+        .header-actions {
             display: flex;
+            gap: 15px;
             align-items: center;
-            gap: 20px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
         }
         
         .btn-primary {
             background: #379975;
             color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary.btn-small {
+            width: 40px;
+            height: 44px;
+            padding: 0;
         }
         
         .btn-primary:hover {
             background: #2d7a5f;
+            text-decoration: none;
+            cursor: pointer;
         }
         
-        .btn-secondary {
-            background: #E57552;
+        .btn-danger {
+            background: #dc3545;
             color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #d65a3f;
-        }
-        
-        .main-content {
-            padding: 40px 0;
-        }
-        
-        .page-title {
-            color: #E57552;
-            margin-bottom: 30px;
-            font-size: 2rem;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 16px;
+            width: 40px;
+            height: 44px;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
+        .btn-danger:hover {
+            background: #c82333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .filters-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .filters-title {
             color: #379975;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #379975;
+            padding-bottom: 10px;
         }
         
-        .stat-label {
-            color: #666;
-            margin-top: 5px;
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            align-items: end;
         }
         
-        .students-table {
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            font-weight: 600;
+            color: #444444;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
+            box-sizing: border-box;
         }
         
-        .table-header {
+        .filter-input:focus {
+            outline: none;
+            border-color: #379975;
+            box-shadow: 0 0 0 3px rgba(55, 153, 117, 0.1);
+            background: #f8f9fa;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            min-height: 50px;
+        }
+        
+        .checkbox-group:hover {
+            border-color: #379975;
+            background: #f8f9fa;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #379975;
+            cursor: pointer;
+        }
+        
+        .checkbox-label {
+            font-weight: 500;
+            color: #444444;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .btn-filter {
             background: #379975;
             color: white;
-            padding: 20px;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 18px;
+            width: 44px;
+            height: 44px;
+            text-align: center;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
         }
         
-        .table-title {
-            font-size: 1.2rem;
-            font-weight: bold;
+        .btn-filter:hover {
+            background: #2d7a5f;
+            cursor: pointer;
+        }
+        
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            width: 44px;
+            height: 44px;
+        }
+        
+        .btn-reset:hover {
+            background: #5a6268;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-top: 20px;
         }
         
         table {
@@ -139,170 +226,300 @@
             border-collapse: collapse;
         }
         
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        
         th {
-            background: #f8f9fa;
-            font-weight: bold;
-            color: #444;
+            background: #E57552;
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        tr:hover {
-            background: #f8f9fa;
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.3s ease;
+        }
+        
+        tr:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover td {
+            background-color: #e9ecef !important;
         }
         
         .student-name {
-            font-weight: bold;
+            font-weight: 600;
             color: #379975;
         }
         
         .student-email {
             color: #666;
-            font-size: 0.9rem;
         }
         
         .actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         
         .btn-small {
-            padding: 5px 10px;
-            font-size: 0.8rem;
-        }
-        
-        .pagination {
+            font-size: 16px;
+            border-radius: 6px;
+            text-align: center;
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin-top: 20px;
+            justify-content: center;
         }
         
-        .pagination a, .pagination span {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-secondary.btn-small {
+            width: 40px;
+            height: 44px;
+            padding: 0;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
             text-decoration: none;
-            color: #444;
-            border-radius: 3px;
+            cursor: pointer;
         }
         
-        .pagination a:hover {
-            background: #379975;
-            color: white;
-            border-color: #379975;
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            background: #f8f9fa;
         }
         
-        .pagination .current {
-            background: #379975;
-            color: white;
-            border-color: #379975;
+        .empty-state a {
+            color: #379975;
+            font-weight: 600;
         }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="container">
-            <div class="header-content">
-                <a href="/" class="logo-link">
-                    <img src="{{ asset('logo.png') }}" alt="Logo UniMarconi" class="logo">
-                </a>
-                <div class="user-info">
-                    <span>Segreteria</span>
-                    <a href="/logout" class="btn btn-secondary">Logout</a>
+        
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            .filters-container {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .filter-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .actions {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                margin: 0 -20px;
+                border-radius: 0;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            th, td {
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 20px;
+            }
+            
+            .filters-container {
+                padding: 15px;
+            }
+            
+            .filter-input {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 10px 6px;
+                font-size: 13px;
+            }
+            
+            .btn-small {
+                width: 35px;
+                height: 44px;
+                font-size: 14px;
+            }
+            
+            .table-container {
+                margin: 0 -15px;
+            }
+        }
+{% endblock %}
+
+{% block content %}
+                <div class="page-header">
+                    <h1>🎓 Gestione Studenti</h1>
+                    <div class="header-actions">
+                        <button id="toggleFilters" class="btn btn-secondary">Filtri</button>
+                        <a href="/student/new" class="btn btn-primary">Aggiungi Studente</a>
+                    </div>
                 </div>
-            </div>
+        
+        <div class="filters-container" id="filtersContainer" style="display: none;">
+            <h3 class="filters-title">🔍 Filtri di Ricerca</h3>
+            <form method="GET" class="filters-grid">
+                <div class="filter-group">
+                    <label for="nome" class="filter-label">Nome</label>
+                    <input type="text" id="nome" name="nome" value="{{ app.request.query.get('nome', '') }}" class="filter-input" placeholder="Cerca per nome...">
+                </div>
+                <div class="filter-group">
+                    <label for="cognome" class="filter-label">Cognome</label>
+                    <input type="text" id="cognome" name="cognome" value="{{ app.request.query.get('cognome', '') }}" class="filter-input" placeholder="Cerca per cognome...">
+                </div>
+                <div class="filter-group">
+                    <label for="email" class="filter-label">Email</label>
+                    <input type="text" id="email" name="email" value="{{ app.request.query.get('email', '') }}" class="filter-input" placeholder="Cerca per email...">
+                </div>
+                <div class="filter-group">
+                    <label for="codiceFiscale" class="filter-label">Codice Fiscale</label>
+                    <input type="text" id="codiceFiscale" name="codiceFiscale" value="{{ app.request.query.get('codiceFiscale', '') }}" class="filter-input" placeholder="Cerca per CF...">
+                </div>
+                <div class="filter-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="soloMiei" name="soloMiei" value="1" {{ app.request.query.get('soloMiei') ? 'checked' : '' }}>
+                        <label for="soloMiei" class="checkbox-label">Solo i miei studenti</label>
+                    </div>
+                </div>
+                        <div class="filter-actions">
+                            <button type="submit" class="btn-filter" title="Filtra">🔍</button>
+                            <a href="/" class="btn-reset" title="Reset">🔄</a>
+                        </div>
+            </form>
         </div>
-    </div>
-    
-    <div class="main-content">
-        <div class="container">
-            <h1 class="page-title">Gestione Studenti</h1>
-            
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-number">{{ totalStudents }}</div>
-                    <div class="stat-label">Studenti Totali</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ students|length }}</div>
-                    <div class="stat-label">In Questa Pagina</div>
-                </div>
-            </div>
-            
-            <div class="students-table">
-                <div class="table-header">
-                    <div class="table-title">Elenco Studenti</div>
-                    <a href="/student/new" class="btn btn-primary">+ Nuovo Studente</a>
-                </div>
-                
-                <table>
+        
+        <div class="table-container">
+            <table>
                     <thead>
                         <tr>
                             <th>Nome</th>
                             <th>Email</th>
                             <th>Codice Fiscale</th>
-                            <th>Ateneo</th>
                             <th>Corso Interesse</th>
-                            <th>Data Registrazione</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for student in students %}
-                        <tr>
-                            <td>
-                                <div class="student-name">{{ student.fullName }}</div>
-                            </td>
-                            <td>
-                                <div class="student-email">{{ student.email }}</div>
-                            </td>
-                            <td>{{ student.codiceFiscale }}</td>
-                            <td>{{ student.ateneoProvenienza }}</td>
-                            <td>{{ student.corsoStudioInteresse }}</td>
-                            <td>{{ student.createdAt|date('d/m/Y H:i') }}</td>
-                            <td>
-                                <div class="actions">
-                                    <a href="/student/{{ student.id }}" class="btn btn-primary btn-small">Visualizza</a>
-                                    <a href="/student/{{ student.id }}/edit" class="btn btn-secondary btn-small">Modifica</a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
-                                Nessuno studente trovato. <a href="/student/new">Crea il primo studente</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            {% if totalPages > 1 %}
-            <div class="pagination">
-                {% if currentPage > 1 %}
-                    <a href="?page={{ currentPage - 1 }}">« Precedente</a>
-                {% endif %}
-                
-                {% for page in 1..totalPages %}
-                    {% if page == currentPage %}
-                        <span class="current">{{ page }}</span>
-                    {% else %}
-                        <a href="?page={{ page }}">{{ page }}</a>
-                    {% endif %}
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td><div class="student-name">{{ student.fullName }}</div></td>
+                    <td><div class="student-email">{{ student.email }}</div></td>
+                    <td>{{ student.codiceFiscale }}</td>
+                    <td>{{ student.corsoStudioInteresse }}</td>
+                    <td>
+                        <div class="actions">
+                            <a href="/student/{{ student.id }}" class="btn btn-primary btn-small" title="Visualizza">👁️</a>
+                            <a href="/student/{{ student.id }}/edit" class="btn btn-secondary btn-small" title="Modifica">✏️</a>
+                            <a href="/student/{{ student.id }}/delete" class="btn btn-danger btn-small" title="Elimina" onclick="return confirm('Sei sicuro di voler eliminare questo studente?')">🗑️</a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📚</div>
+                        <h3 style="color: #666; margin-bottom: 15px;">Nessuno studente trovato</h3>
+                        <p>Non ci sono studenti che corrispondono ai tuoi criteri di ricerca.</p>
+                        <a href="/student/new" style="margin-top: 20px; display: inline-block;">Crea il primo studente</a>
+                    </td>
+                </tr>
                 {% endfor %}
+            </tbody>
+                </table>
+                </div>
                 
-                {% if currentPage < totalPages %}
-                    <a href="?page={{ currentPage + 1 }}">Successiva »</a>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</body>
-</html>
+        <script>
+            // Controlla se ci sono filtri attivi
+            function hasActiveFilters() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const filterParams = ['nome', 'cognome', 'email', 'codiceFiscale', 'soloMiei'];
+                
+                for (let param of filterParams) {
+                    if (urlParams.get(param) && urlParams.get(param).trim() !== '') {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            // Mostra/nasconde i filtri in base ai parametri attivi
+            function initializeFilters() {
+                const filtersContainer = document.getElementById('filtersContainer');
+                const toggleButton = document.getElementById('toggleFilters');
+                
+                if (hasActiveFilters()) {
+                    filtersContainer.style.display = 'block';
+                    toggleButton.textContent = 'Nascondi Filtri';
+                } else {
+                    filtersContainer.style.display = 'none';
+                    toggleButton.textContent = 'Filtri';
+                }
+            }
+            
+            // Inizializza i filtri al caricamento della pagina
+            document.addEventListener('DOMContentLoaded', initializeFilters);
+            
+            // Toggle dei filtri
+            document.getElementById('toggleFilters').addEventListener('click', function() {
+                const filtersContainer = document.getElementById('filtersContainer');
+                const button = this;
+                
+                if (filtersContainer.style.display === 'none') {
+                    filtersContainer.style.display = 'block';
+                    button.textContent = 'Nascondi Filtri';
+                } else {
+                    filtersContainer.style.display = 'none';
+                    button.textContent = 'Filtri';
+                }
+            });
+        </script>
+        {% endblock %}

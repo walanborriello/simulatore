@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\StudentProspective;
+use App\Entity\StudentManagement;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,38 +14,6 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class StudentController extends AbstractController
 {
-    #[Route('/', name: 'app_index')]
-    public function index(EntityManagerInterface $em, SessionInterface $session, Request $request): Response
-    {
-        $this->checkToken($session);
-        
-        $page = $request->query->getInt('page', 1);
-        $limit = 10;
-        $offset = ($page - 1) * $limit;
-        
-        $students = $em->getRepository(StudentProspective::class)
-            ->createQueryBuilder('s')
-            ->orderBy('s.createdAt', 'DESC')
-            ->setFirstResult($offset)
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
-            
-        $totalStudents = $em->getRepository(StudentProspective::class)
-            ->createQueryBuilder('s')
-            ->select('COUNT(s.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
-            
-        $totalPages = ceil($totalStudents / $limit);
-        
-        return $this->render('student/index.html.twig', [
-            'students' => $students,
-            'currentPage' => $page,
-            'totalPages' => $totalPages,
-            'totalStudents' => $totalStudents
-        ]);
-    }
     
     #[Route('/student/new', name: 'app_student_new')]
     public function new(Request $request, EntityManagerInterface $em, SessionInterface $session): Response
@@ -54,6 +23,8 @@ class StudentController extends AbstractController
         $student = new StudentProspective();
         
         if ($request->isMethod('POST')) {
+            $currentToken = $session->get('user_token');
+            
             $student->setFirstName($request->request->get('firstName', ''));
             $student->setLastName($request->request->get('lastName', ''));
             $student->setEmail($request->request->get('email', ''));
@@ -62,10 +33,14 @@ class StudentController extends AbstractController
             $student->setCorsoStudioInteresse($request->request->get('corsoStudioInteresse', ''));
             $student->setPhone($request->request->get('phone', ''));
             $student->setNotes($request->request->get('notes', ''));
+            $student->setManagedBy($currentToken);
             $student->setUpdatedAt(new \DateTime());
             
             $em->persist($student);
             $em->flush();
+            
+            // Log del cambio token per nuovo studente
+            $this->logTokenChange($em, $student->getId(), null, $currentToken);
             
             $session->set('success_message', 'Studente creato con successo');
             return $this->redirectToRoute('app_student_show', ['id' => $student->getId()]);
@@ -87,12 +62,8 @@ class StudentController extends AbstractController
             throw $this->createNotFoundException('Studente non trovato');
         }
         
-        $simulations = $em->getRepository(Simulation::class)
-            ->findBy(['student' => $student], ['createdAt' => 'DESC']);
-        
         return $this->render('student/show.html.twig', [
-            'student' => $student,
-            'simulations' => $simulations
+            'student' => $student
         ]);
     }
     
@@ -108,6 +79,9 @@ class StudentController extends AbstractController
         }
         
         if ($request->isMethod('POST')) {
+            $currentToken = $session->get('user_token');
+            $oldToken = $student->getManagedBy();
+            
             $student->setFirstName($request->request->get('firstName', ''));
             $student->setLastName($request->request->get('lastName', ''));
             $student->setEmail($request->request->get('email', ''));
@@ -116,9 +90,15 @@ class StudentController extends AbstractController
             $student->setCorsoStudioInteresse($request->request->get('corsoStudioInteresse', ''));
             $student->setPhone($request->request->get('phone', ''));
             $student->setNotes($request->request->get('notes', ''));
+            $student->setManagedBy($currentToken);
             $student->setUpdatedAt(new \DateTime());
             
             $em->flush();
+            
+            // Log del cambio token se è diverso
+            if ($oldToken !== $currentToken) {
+                $this->logTokenChange($em, $student->getId(), $oldToken, $currentToken);
+            }
             
             $session->set('success_message', 'Studente aggiornato con successo');
             return $this->redirectToRoute('app_student_show', ['id' => $student->getId()]);
@@ -129,8 +109,8 @@ class StudentController extends AbstractController
         ]);
     }
     
-    #[Route('/student/{id}/create-test-simulation', name: 'app_student_create_test_simulation', requirements: ['id' => '\d+'])]
-    public function createTestSimulation(int $id, EntityManagerInterface $em, SessionInterface $session): Response
+    #[Route('/student/{id}/delete', name: 'app_student_delete', requirements: ['id' => '\d+'])]
+    public function delete(int $id, EntityManagerInterface $em, SessionInterface $session): Response
     {
         $this->checkToken($session);
         
@@ -140,19 +120,11 @@ class StudentController extends AbstractController
             throw $this->createNotFoundException('Studente non trovato');
         }
         
-        // Crea una simulazione di test
-        $simulation = new Simulation();
-        $simulation->setStudent($student);
-        $simulation->setCdl('Test CDL');
-        $simulation->setInputData(['test' => 'data']);
-        $simulation->setResultData(['result' => 'test']);
-        $simulation->setUserToken($session->get('user_token'));
-        
-        $em->persist($simulation);
+        $em->remove($student);
         $em->flush();
         
-        $session->set('success_message', 'Simulazione di test creata con successo');
-        return $this->redirectToRoute('app_student_show', ['id' => $student->getId()]);
+        $session->set('success_message', 'Studente eliminato con successo');
+        return $this->redirectToRoute('app_index');
     }
     
     private function checkToken(SessionInterface $session): void
@@ -164,5 +136,17 @@ class StudentController extends AbstractController
         if ($session->get('user_role') !== 'segretary') {
             throw new AccessDeniedHttpException('Accesso negato. Ruolo non valido.');
         }
+    }
+    
+    private function logTokenChange(EntityManagerInterface $em, int $studentId, ?string $fromToken, string $toToken): void
+    {
+        $log = new StudentManagement();
+        $log->setStudentId($studentId);
+        $log->setFromToken($fromToken);
+        $log->setToToken($toToken);
+        $log->setModifiedAt(new \DateTime());
+        
+        $em->persist($log);
+        $em->flush();
     }
 }

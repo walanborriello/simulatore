@@ -16,12 +16,23 @@ class LoginController extends AbstractController
         $token = $request->query->get('token');
         
         if (!$token) {
-            return $this->render('login/error.html.twig', [
-                'error' => 'Token mancante. Accesso negato.'
-            ]);
+            return $this->render('error/403.html.twig');
         }
         
-        // Validazione token (qui potresti aggiungere logica più complessa)
+        // Controlla se c'è già una sessione attiva
+        if ($session->has('user_token')) {
+            $currentToken = $session->get('user_token');
+            if ($currentToken !== $token) {
+                return $this->render('login/session_active.html.twig', [
+                    'currentToken' => $currentToken,
+                    'newToken' => $token
+                ]);
+            }
+            // Se è lo stesso token, vai direttamente alla homepage
+            return $this->redirectToRoute('app_index');
+        }
+        
+        // Validazione token semplice
         if ($this->isValidToken($token)) {
             $session->set('user_token', $token);
             $session->set('user_role', 'segretary');
@@ -29,22 +40,26 @@ class LoginController extends AbstractController
             return $this->redirectToRoute('app_index');
         }
         
-        return $this->render('login/error.html.twig', [
-            'error' => 'Token non valido. Accesso negato.'
-        ]);
+        return $this->render('error/403.html.twig');
     }
     
     #[Route('/logout', name: 'app_logout')]
-    public function logout(SessionInterface $session): Response
+    public function logout(Request $request, SessionInterface $session): Response
     {
+        $redirectUrl = $request->query->get('redirect');
         $session->clear();
-        return $this->redirectToRoute('app_login');
+        
+        if ($redirectUrl) {
+            return $this->redirect($redirectUrl);
+        }
+        
+        return $this->render('logout/info.html.twig');
     }
     
     private function isValidToken(string $token): bool
     {
         // Per ora accettiamo qualsiasi token non vuoto
         // In produzione potresti validare contro un database o servizio esterno
-        return !empty($token) && strlen($token) >= 8;
+        return !empty($token);
     }
 }
