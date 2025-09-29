@@ -490,10 +490,12 @@
                     console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
                     
                     if (typeof $ !== 'undefined' && $.fn.select2) {
-                        try {
+                        // Controlla se Select2 è già inizializzato
+                        if ($('#simulator-cdl').hasClass('select2-hidden-accessible')) {
+                            console.log('Select2 CDL già inizializzato, distruggo e ricostruisco...');
                             $('#simulator-cdl').select2('destroy');
-                        } catch(e) {
-                            console.log('Select2 non era inizializzato, procedo con creazione');
+                        } else {
+                            console.log('Select2 CDL non inizializzato, procedo con creazione...');
                         }
                         
                         // Inizializza Select2 con configurazione forzata
@@ -604,10 +606,12 @@
                 
                 // Prova con Select2, fallback a select normale
                 if (typeof $ !== 'undefined' && $.fn.select2) {
-                    try {
+                    // Controlla se Select2 è già inizializzato
+                    if ($(select).hasClass('select2-hidden-accessible')) {
+                        console.log('Select2 SSD già inizializzato, distruggo e ricostruisco...');
                         $(select).select2('destroy');
-                    } catch(e) {
-                        console.log('Select2 SSD non era inizializzato, procedo con creazione');
+                    } else {
+                        console.log('Select2 SSD non inizializzato, procedo con creazione...');
                     }
                     
                     $(select).select2({
