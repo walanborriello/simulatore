@@ -219,6 +219,24 @@ git push -u origin fase-1-repo-setup
 -   Performance: niente query nei loop, pre-caricamento mappe, eventuale
     Redis.
 
+## Passi operativi approccio al simulatore
+    1. Nella pagina di creazione studente aggiungere un div che contiene il simulatore.
+    2. Una volta aggiunta l'anagrafica e fatta la simulazione si può procedere col salvataggio dell'anagrafica, della simulazione e di tracciare nella tabella `students_management`.
+    3. Nella pagina di dettagli dello studente, oltre a esserci l'anagrafica, dovrà essere presente anche una tabella per le simulazioni fatte per lo studente selezionato (ogni studente può avere n simulazioni). La tabella manterrà lo stesso stile delle altre tabelle con paginazione e massimo 5 elementi per volta. 
+    4. Sempre nella pagina di dettaglio, dovrà esserci in alto a destra un bottone "Simulatore" che cliccandolo apre lo stesso simulatore presente nel div di "Aggiungi studente", **SOLO** in questa pagina devi aggiungere questo div, che ti permettere di fare la simulazione e salvarla allo studente che stiamo visualizzando.
+
+## Passi operativi form simulatore
+    1. Validare input.  
+    2. Caricare offerta (`zcfu_offerta`) per CDL scelto, distinguendo **obbligatorie** (rosa=0) e **rose** (rosa>0).  
+    3. Caricare regole (`zcfu_regole`) in memoria.  
+    4. Inizializzare array `needed[ID_off]`, `assigned[ID_off]=0`, `available[ID_ric]`.  
+    5. Matching obbligatorie → priorità 0, poi priorità 1.  
+    6. Avvio simulazione → l'algoritmo calcola convalide su **obbligatorie** (rosa=0) e poi **gruppi a scelta** (rosa > 0) con priorità regole (0, poi 1) e **rollback** delle parziali non soddisfacenti.  
+    7. Generare Tabella 1 (dettaglio).  
+    8. Generare Tabella 2 (riepilogo: totali riconosciuti, integrativi richiesti).  
+    9. Generare Tabella 3 (rimanenze: CFU residui).  
+    10. Salvare in DB (opzionale).  
+
 *Checklist Fase 5:* - \[ \] Endpoint `POST /api/simulate` restituisce
 JSON coerente\
 - \[ \] UI `/simulatore` con 3 tabelle e paginazione\
@@ -333,13 +351,60 @@ Cerca di evitare errori grafici. Il brand-text ben definito che non sia di distu
     errore.
 -   header **GENERICO PER TUTTE LE PAGINE DEL SITO** con logo a sinistra cliccabile che ti porti in homepage e a destra il tasto di logout che se cliccato ti fa redirect verso una pagina che ti informa che per loggarsi devi avere un token e che non abbia altre scritte vicino
 
+## **IMPORTANTE - Gif di Loading**
+    - **Gif di Loading**: Deve essere mostrata OVUNQUE nel portale quando si fa un'operazione che richiede tempo di elaborazione (submit, salvataggio, eliminazione, caricamento)
+    - **Caratteristiche**: Considerare la gif di loading (magari gli metti il logo al centro ben visibile, almeno 100px) solo se cliccato il pulsante di simulazione o se richiede tempo di elaborazione nelle chiamate ajax o di click sul salvataggio nelle varie form del portale. Il loading dovrà avere uno sfondo opaco bianco che non dia la possibilità di click negli elementi sottostanti. Non inserire altre frasi o messaggi durante il loading.
+    **IMPORTANTE: DEVE ESSERE UGUALE IN TUTTO IL SITO**
+
+## Stile per fase 5
+    ### Gestione error messages
+        - Al click del pulsante "Calcola Simulazione", se un campo presenta errore di validazione, deve essere mostrato:
+        1. Bordo rosso attorno al campo
+        2. Messaggio di errore specifico sotto il campo stesso
+        3. Questo vale per TUTTI i campi del form: select CDL, select SSD, input CFU, input nome disciplina
+        4. I messaggi di errore devono essere specifici per ogni tipo di campo e spiegare chiaramente cosa manca
+        5. Fai un transition scroll (lento) verso il primo campo che presenta l'errore
+        6. I messaggi di errore devono essere nascosti quando:
+            - L'utente clicca su un campo input text
+            - L'utente cambia il valore di una select (evento change)
+            - Il campo diventa valido (ha un valore e supera la validazione)
+        7. I messaggi di errore devono essere mostrati solo al click del pulsante "Calcola Simulazione", non durante la digitazione e solo sulle form visibili. Quelle non visibili **NON** devi fare validazione, non voglio vedere messaggi di errori.
+        8. Ogni campo deve avere il proprio messaggio di errore specifico:
+            - CDL: "Seleziona un corso di laurea valido per procedere con la simulazione."
+            - SSD: "Seleziona il settore scientifico disciplinare della materia che hai sostenuto."
+            - CFU: "Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30)."
+            - Nome: "Inserisci il nome completo della disciplina che hai sostenuto."
+        9. Lo scroll automatico deve avvenire SOLO quando si clicca "Calcola Simulazione" e ci sono errori di validazione. NON deve avvenire scroll quando si seleziona un SSD o si cambia il valore di una select durante la normale compilazione del form e al change delle option di "Seleziona corso di laurea" fai una transaction (lenta) scroll verso il div che contiene il titolo della form sottostante.
+        10. I messaggi di errore sul singolo campo devono sparire in caso di click sul campo stesso o in caso di change del valore della select (usa la change di select2 altrimenti non lo riconoscerai mai).
+        11. Non mi devi assolutamente cambiare la lunghezza delle select, devono essere al 100% dello spazio disponibile nemmeno quando mi mostri gli errori.
+
+    ### Gestione form discipline
+        - La sezione "Discipline Esterne da Riconoscere" deve essere inizialmente nascosta
+        - Quando si seleziona un CDL, la sezione deve diventare visibile E le select SSD devono essere abilitate e popolate
+        - Le select SSD devono essere abilitate fin dall'inizio, non disabilitate
+        - Quando si aggiunge una nuova riga di disciplina, le select SSD devono essere già popolate con i dati del CDL selezionato
+        - La validazione deve avvenire SOLO se la sezione è visibile
+
+    ### Gestione select SSD
+        - Le select SSD devono essere sempre abilitate (non disabilitate)
+        - Quando si seleziona un CDL, tutte le select SSD (esistenti e future) devono essere popolate
+        - Quando si aggiunge una nuova riga, la select SSD deve essere già popolata con i dati del CDL corrente
+        - Le select SSD devono mostrare "Seleziona SSD" come placeholder quando non c'è CDL selezionato
+
+**IMPORTANTE E CRITICO**: Avendo lo stesso simulatore in due punti diversi ossia nel div di crea studente e pagina dedicata, **devi** mantenere lo **STESSO STILE**.
+
 ------------------------------------------------------------------------
 
 ## 15) Output: le tre tabelle
 
-1.  **Dettaglio** (convalide puntuali, priorità, note)\
-2.  **Riepilogo** (riconosciuti, integrativi, stato)\
-3.  **Rimanenze** (residui e motivazioni) --- tutte con paginazione.
+- **Tabella 1 — Dettaglio riconoscimenti**: disciplina Unimarconi, CFU richiesti, disciplina esterna, CFU assegnati, priorità, note.  
+- **Tabella 2 — Riepilogo**: disciplina Unimarconi, CFU richiesti, CFU riconosciuti, integrativi richiesti, stato (tot/parziale/non).  
+- **Tabella 3 — Rimanenze**: disciplina esterna, CFU residui, motivazione (no rule, maxCFU superato, ecc.).  
+### Stile tabelle
+    - Le tre tabelle dovranno avere uno stile chiaro, sfruttare il 100% dello spazio disponibile e magari per tutte le righe sceglierei due colori `#fff` e qualcosa tendente al grigio chiaro per fare contrasto per differenziarle l'una dall'altra.
+    - Aggiungi la paginazione a queste tre tabelle, dando un massimo di 5 righe in visualizzazione.
+    - Mantieni la stessa lunghezza per ogni view nella paginazione, se magari ti trovi un testo troppo lungo allora manda a capo.
+
 
 ------------------------------------------------------------------------
 
@@ -408,12 +473,11 @@ php bin/console doctrine:fixtures:load  # solo dopo import schema.sql
 
 ## 22) Best practice per il form
 
--   Select2 per CDL/SSD; sezione discipline visibile solo con CDL
-    selezionato.\
+-   Select2 con search per CDL/SSD; sezione discipline visibile solo con CDL
+    selezionato e che abbia dei risultati.\
 -   Validazione lato client solo al click "Calcola simulazione";
     messaggi specifici per campo.\
 -   Righe dinamiche (min 3 iniziali + add/remove).\
--   GIF di loading uniforme, overlay bloccante.
 
 ------------------------------------------------------------------------
 

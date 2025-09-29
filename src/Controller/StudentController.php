@@ -62,8 +62,18 @@ class StudentController extends AbstractController
             throw $this->createNotFoundException('Studente non trovato');
         }
         
+        // Carica le simulazioni dello studente
+        $simulations = $em->getRepository(\App\Entity\Simulation::class)
+            ->createQueryBuilder('s')
+            ->where('s.studentId = :studentId')
+            ->setParameter('studentId', $id)
+            ->orderBy('s.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+        
         return $this->render('student/show.html.twig', [
-            'student' => $student
+            'student' => $student,
+            'simulations' => $simulations
         ]);
     }
     

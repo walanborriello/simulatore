@@ -19,7 +19,7 @@
             color: #444444;
         }
         
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -27,7 +27,7 @@
             font-size: 1rem;
         }
         
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: #379975;
             box-shadow: 0 0 0 2px rgba(55, 153, 117, 0.2);
@@ -67,6 +67,184 @@
         small {
             color: #666;
             font-size: 0.9em;
+        }
+        
+        /* Simulatore Styles */
+        .simulator-container {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .simulator-title {
+            color: #E57552;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .simulator-section {
+            margin-bottom: 30px;
+        }
+        
+        .discipline-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: end;
+        }
+        
+        .discipline-row .form-group {
+            margin-bottom: 0;
+        }
+        
+        .discipline-row .form-group:nth-child(1) { flex: 1; }
+        .discipline-row .form-group:nth-child(2) { flex: 1; }
+        .discipline-row .form-group:nth-child(3) { flex: 0.5; }
+        .discipline-row .form-group:nth-child(4) { flex: 0.3; }
+        
+        .btn-add-discipline {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-add-discipline:hover {
+            background: #218838;
+        }
+        
+        .btn-remove-discipline {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-remove-discipline:hover {
+            background: #c82333;
+        }
+        
+        .btn-simulate {
+            background: #E57552;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .btn-simulate:hover {
+            background: #d65a3f;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .field-error {
+            border-color: #dc3545 !important;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .loading-logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+        }
+        
+        .results-container {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .results-table th {
+            background: #E57552;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .results-table tr:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .pagination button:hover {
+            background: #f8f9fa;
+        }
+        
+        .pagination button.active {
+            background: #379975;
+            color: white;
+            border-color: #379975;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 {% endblock %}
 
@@ -122,4 +300,448 @@
                 </div>
             </form>
         </div>
+        
+        <!-- Simulatore CFU -->
+        <div class="simulator-container">
+            <h2 class="simulator-title">🎓 Simulatore CFU</h2>
+            
+            <div class="simulator-section">
+                <div class="form-group">
+                    <label for="simulator-cdl">Seleziona Corso di Laurea <span class="required">*</span></label>
+                    <select id="simulator-cdl" name="simulator-cdl">
+                        <option value="">Seleziona corso di laurea...</option>
+                    </select>
+                    <div class="error-message" id="cdl-error"></div>
+                </div>
+            </div>
+            
+            <div class="simulator-section" id="discipline-section" style="display: none;">
+                <h3 style="color: #E57552; margin-bottom: 20px;">Discipline Esterne da Riconoscere</h3>
+                <div id="discipline-rows">
+                    <!-- Le righe delle discipline verranno aggiunte dinamicamente -->
+                </div>
+                <button type="button" class="btn-add-discipline" id="add-discipline">+ Aggiungi Disciplina</button>
+                <button type="button" class="btn-simulate" id="simulate-btn">Calcola Simulazione</button>
+            </div>
+            
+            <!-- Risultati -->
+            <div class="results-container" id="results-container">
+                <h3 style="color: #E57552; margin-bottom: 20px;">Risultati Simulazione</h3>
+                
+                <!-- Tabella 1: Dettaglio -->
+                <div id="detail-table-container">
+                    <h4>Dettaglio Riconoscimenti</h4>
+                    <table class="results-table" id="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Disciplina UniMarconi</th>
+                                <th>CFU Richiesti</th>
+                                <th>Disciplina Esterna</th>
+                                <th>CFU Assegnati</th>
+                                <th>Priorità</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="pagination" id="detail-pagination"></div>
+                </div>
+                
+                <!-- Tabella 2: Riepilogo -->
+                <div id="summary-table-container">
+                    <h4>Riepilogo</h4>
+                    <table class="results-table" id="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Disciplina UniMarconi</th>
+                                <th>CFU Richiesti</th>
+                                <th>CFU Riconosciuti</th>
+                                <th>Integrativi Richiesti</th>
+                                <th>Stato</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="pagination" id="summary-pagination"></div>
+                </div>
+                
+                <!-- Tabella 3: Rimanenze -->
+                <div id="leftover-table-container">
+                    <h4>Rimanenze</h4>
+                    <table class="results-table" id="leftover-table">
+                        <thead>
+                            <tr>
+                                <th>Disciplina Esterna</th>
+                                <th>CFU Residui</th>
+                                <th>Motivazione</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="pagination" id="leftover-pagination"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="loading-content">
+                <img src="/logo.png" alt="Loading" class="loading-logo">
+            </div>
+        </div>
+        
+        <script>
+            // Variabili globali
+            let disciplineCount = 0;
+            let currentCdl = '';
+            let ssdOptions = [];
+            let currentResults = null;
+            
+            // Inizializzazione
+            document.addEventListener('DOMContentLoaded', function() {
+                loadCdlOptions();
+                addDisciplineRow();
+                addDisciplineRow();
+                addDisciplineRow(); // Minimo 3 righe
+                
+                // Event listeners
+                document.getElementById('simulator-cdl').addEventListener('change', handleCdlChange);
+                document.getElementById('add-discipline').addEventListener('click', addDisciplineRow);
+                document.getElementById('simulate-btn').addEventListener('click', simulate);
+            });
+            
+            // Carica opzioni CDL
+            async function loadCdlOptions() {
+                try {
+                    const response = await fetch('/api/cdl');
+                    const cdlData = await response.json();
+                    
+                    const select = document.getElementById('simulator-cdl');
+                    cdlData.forEach(cdl => {
+                        const option = document.createElement('option');
+                        option.value = cdl.id;
+                        option.textContent = cdl.text;
+                        select.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Errore nel caricamento CDL:', error);
+                }
+            }
+            
+            // Gestisce cambio CDL
+            async function handleCdlChange() {
+                const cdlSelect = document.getElementById('simulator-cdl');
+                const disciplineSection = document.getElementById('discipline-section');
+                
+                currentCdl = cdlSelect.value;
+                
+                if (currentCdl) {
+                    disciplineSection.style.display = 'block';
+                    await loadSsdOptions(currentCdl);
+                    populateAllSsdSelects();
+                    
+                    // Scroll lento verso la sezione discipline
+                    disciplineSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    disciplineSection.style.display = 'none';
+                }
+                
+                clearError('cdl-error');
+            }
+            
+            // Carica opzioni SSD per CDL
+            async function loadSsdOptions(cdl) {
+                try {
+                    const response = await fetch(`/api/ssd/${cdl}`);
+                    const ssdData = await response.json();
+                    ssdOptions = ssdData;
+                } catch (error) {
+                    console.error('Errore nel caricamento SSD:', error);
+                    ssdOptions = [];
+                }
+            }
+            
+            // Popola tutte le select SSD
+            function populateAllSsdSelects() {
+                const ssdSelects = document.querySelectorAll('.ssd-select');
+                ssdSelects.forEach(select => {
+                    populateSsdSelect(select);
+                });
+            }
+            
+            // Popola una select SSD
+            function populateSsdSelect(select) {
+                select.innerHTML = '<option value="">Seleziona SSD...</option>';
+                ssdOptions.forEach(ssd => {
+                    const option = document.createElement('option');
+                    option.value = ssd.id;
+                    option.textContent = ssd.text;
+                    select.appendChild(option);
+                });
+            }
+            
+            // Aggiunge riga disciplina
+            function addDisciplineRow() {
+                disciplineCount++;
+                const container = document.getElementById('discipline-rows');
+                
+                const row = document.createElement('div');
+                row.className = 'discipline-row';
+                row.id = `discipline-row-${disciplineCount}`;
+                
+                row.innerHTML = `
+                    <div class="form-group">
+                        <label>SSD <span class="required">*</span></label>
+                        <select class="ssd-select" name="ssd_${disciplineCount}">
+                            <option value="">Seleziona SSD...</option>
+                        </select>
+                        <div class="error-message" id="ssd_${disciplineCount}_error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nome Disciplina <span class="required">*</span></label>
+                        <input type="text" name="nome_${disciplineCount}" placeholder="Nome disciplina...">
+                        <div class="error-message" id="nome_${disciplineCount}_error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>CFU <span class="required">*</span></label>
+                        <input type="number" name="cfu_${disciplineCount}" min="1" max="30" placeholder="CFU">
+                        <div class="error-message" id="cfu_${disciplineCount}_error"></div>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn-remove-discipline" onclick="removeDisciplineRow(${disciplineCount})">🗑️</button>
+                    </div>
+                `;
+                
+                container.appendChild(row);
+                
+                // Popola la select SSD se ci sono opzioni disponibili
+                if (ssdOptions.length > 0) {
+                    const select = row.querySelector('.ssd-select');
+                    populateSsdSelect(select);
+                }
+                
+                // Event listeners per validazione
+                const inputs = row.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.addEventListener('focus', () => clearFieldError(input));
+                    input.addEventListener('change', () => clearFieldError(input));
+                });
+            }
+            
+            // Rimuove riga disciplina
+            function removeDisciplineRow(id) {
+                const row = document.getElementById(`discipline-row-${id}`);
+                if (row && disciplineCount > 3) { // Mantieni minimo 3 righe
+                    row.remove();
+                }
+            }
+            
+            // Simula
+            async function simulate() {
+                if (!validateForm()) {
+                    return;
+                }
+                
+                showLoading();
+                
+                try {
+                    const data = {
+                        cdl: currentCdl,
+                        discipline: getDisciplineData()
+                    };
+                    
+                    const response = await fetch('/api/simulate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        currentResults = result.data;
+                        displayResults(result.data);
+                    } else {
+                        alert('Errore nella simulazione: ' + (result.error || 'Errore sconosciuto'));
+                    }
+                } catch (error) {
+                    console.error('Errore:', error);
+                    alert('Errore nella simulazione');
+                } finally {
+                    hideLoading();
+                }
+            }
+            
+            // Valida form
+            function validateForm() {
+                let isValid = true;
+                
+                // Valida CDL
+                const cdlSelect = document.getElementById('simulator-cdl');
+                if (!cdlSelect.value) {
+                    showError('cdl-error', 'Seleziona un corso di laurea valido per procedere con la simulazione.');
+                    isValid = false;
+                }
+                
+                // Valida discipline
+                const rows = document.querySelectorAll('.discipline-row');
+                rows.forEach((row, index) => {
+                    const ssdSelect = row.querySelector('.ssd-select');
+                    const nomeInput = row.querySelector('input[name^="nome_"]');
+                    const cfuInput = row.querySelector('input[name^="cfu_"]');
+                    
+                    if (!ssdSelect.value) {
+                        showError(`ssd_${index + 1}_error`, 'Seleziona il settore scientifico disciplinare della materia che hai sostenuto.');
+                        isValid = false;
+                    }
+                    
+                    if (!nomeInput.value.trim()) {
+                        showError(`nome_${index + 1}_error`, 'Inserisci il nome completo della disciplina che hai sostenuto.');
+                        isValid = false;
+                    }
+                    
+                    if (!cfuInput.value || cfuInput.value < 1 || cfuInput.value > 30) {
+                        showError(`cfu_${index + 1}_error`, 'Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30).');
+                        isValid = false;
+                    }
+                });
+                
+                // Scroll al primo errore
+                if (!isValid) {
+                    const firstError = document.querySelector('.field-error, .error-message[style*="block"]');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+                
+                return isValid;
+            }
+            
+            // Ottiene dati discipline
+            function getDisciplineData() {
+                const data = [];
+                const rows = document.querySelectorAll('.discipline-row');
+                
+                rows.forEach(row => {
+                    const ssdSelect = row.querySelector('.ssd-select');
+                    const nomeInput = row.querySelector('input[name^="nome_"]');
+                    const cfuInput = row.querySelector('input[name^="cfu_"]');
+                    
+                    if (ssdSelect.value && nomeInput.value && cfuInput.value) {
+                        data.push({
+                            ssd: ssdSelect.value,
+                            nome: nomeInput.value.trim(),
+                            cfu: parseInt(cfuInput.value)
+                        });
+                    }
+                });
+                
+                return data;
+            }
+            
+            // Mostra risultati
+            function displayResults(results) {
+                const container = document.getElementById('results-container');
+                container.style.display = 'block';
+                
+                displayTable('detail-table', results.detail, 'detail-pagination');
+                displayTable('summary-table', results.summary, 'summary-pagination');
+                displayTable('leftover-table', results.leftovers, 'leftover-pagination');
+                
+                container.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            // Mostra tabella con paginazione
+            function displayTable(tableId, data, paginationId, itemsPerPage = 5) {
+                const table = document.getElementById(tableId);
+                const tbody = table.querySelector('tbody');
+                const pagination = document.getElementById(paginationId);
+                
+                tbody.innerHTML = '';
+                pagination.innerHTML = '';
+                
+                if (data.length === 0) {
+                    const row = tbody.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = table.querySelectorAll('th').length;
+                    cell.textContent = 'Nessun dato disponibile';
+                    cell.style.textAlign = 'center';
+                    return;
+                }
+                
+                const totalPages = Math.ceil(data.length / itemsPerPage);
+                let currentPage = 1;
+                
+                function showPage(page) {
+                    tbody.innerHTML = '';
+                    const start = (page - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    const pageData = data.slice(start, end);
+                    
+                    pageData.forEach(item => {
+                        const row = tbody.insertRow();
+                        Object.values(item).forEach(value => {
+                            const cell = row.insertCell();
+                            cell.textContent = value || '';
+                        });
+                    });
+                    
+                    // Aggiorna paginazione
+                    pagination.innerHTML = '';
+                    for (let i = 1; i <= totalPages; i++) {
+                        const button = document.createElement('button');
+                        button.textContent = i;
+                        button.className = i === page ? 'active' : '';
+                        button.addEventListener('click', () => {
+                            currentPage = i;
+                            showPage(i);
+                        });
+                        pagination.appendChild(button);
+                    }
+                }
+                
+                showPage(1);
+            }
+            
+            // Utility functions
+            function showError(elementId, message) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = message;
+                    element.style.display = 'block';
+                    
+                    // Aggiungi classe error al campo
+                    const field = element.previousElementSibling;
+                    if (field) {
+                        field.classList.add('field-error');
+                    }
+                }
+            }
+            
+            function clearError(elementId) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.style.display = 'none';
+                    element.textContent = '';
+                }
+            }
+            
+            function clearFieldError(field) {
+                const errorElement = field.parentNode.querySelector('.error-message');
+                if (errorElement) {
+                    clearError(errorElement.id);
+                }
+                field.classList.remove('field-error');
+            }
+            
+            function showLoading() {
+                document.getElementById('loading-overlay').style.display = 'flex';
+            }
+            
+            function hideLoading() {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        </script>
 {% endblock %}
