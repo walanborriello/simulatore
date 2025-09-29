@@ -580,9 +580,7 @@
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
                 loadCdlOptions();
-                addDisciplineRow();
-                addDisciplineRow();
-                addDisciplineRow(); // Minimo 3 righe
+                addDisciplineRow(); // Minimo 1 riga
                 
                 // Event listeners
                 document.getElementById('toggle-simulator').addEventListener('click', toggleSimulator);
@@ -634,7 +632,13 @@
                 if (currentCdl) {
                     disciplineSection.style.display = 'block';
                     await loadSsdOptions(currentCdl);
-                    populateAllSsdSelects();
+                    
+                    if (ssdOptions.length === 0) {
+                        showNoSsdMessage();
+                    } else {
+                        hideNoSsdMessage();
+                        populateAllSsdSelects();
+                    }
                     
                     // Scroll lento verso la sezione discipline
                     disciplineSection.scrollIntoView({ behavior: 'smooth' });
@@ -674,6 +678,29 @@
                     option.textContent = ssd.text;
                     select.appendChild(option);
                 });
+            }
+            
+            // Mostra messaggio nessun SSD disponibile
+            function showNoSsdMessage() {
+                let messageDiv = document.getElementById('no-ssd-message');
+                if (!messageDiv) {
+                    messageDiv = document.createElement('div');
+                    messageDiv.id = 'no-ssd-message';
+                    messageDiv.style.cssText = 'background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;';
+                    messageDiv.innerHTML = '⚠️ Non ci sono discipline esterne disponibili per questo corso di laurea.';
+                    
+                    const disciplineRows = document.getElementById('discipline-rows');
+                    disciplineRows.parentNode.insertBefore(messageDiv, disciplineRows);
+                }
+                messageDiv.style.display = 'block';
+            }
+            
+            // Nasconde messaggio nessun SSD
+            function hideNoSsdMessage() {
+                const messageDiv = document.getElementById('no-ssd-message');
+                if (messageDiv) {
+                    messageDiv.style.display = 'none';
+                }
             }
             
             // Aggiunge riga disciplina
@@ -717,18 +744,33 @@
                 }
                 
                 // Event listeners per validazione
-                const inputs = row.querySelectorAll('input, select');
+                const inputs = row.querySelectorAll('input');
                 inputs.forEach(input => {
                     input.addEventListener('focus', () => clearFieldError(input));
                     input.addEventListener('change', () => clearFieldError(input));
                 });
+                
+                // Event listener per select SSD (usando Select2 se disponibile)
+                const ssdSelect = row.querySelector('.ssd-select');
+                if (ssdSelect) {
+                    ssdSelect.addEventListener('focus', () => clearFieldError(ssdSelect));
+                    // Usa Select2 change event se disponibile, altrimenti fallback su change standard
+                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                        $(ssdSelect).on('change', () => clearFieldError(ssdSelect));
+                    } else {
+                        ssdSelect.addEventListener('change', () => clearFieldError(ssdSelect));
+                    }
+                }
             }
             
             // Rimuove riga disciplina
             window.removeDisciplineRow = function(id) {
                 const row = document.getElementById(`discipline-row-${id}`);
-                if (row && disciplineCount > 3) { // Mantieni minimo 3 righe
+                if (row && disciplineCount > 1) { // Mantieni minimo 1 riga
                     row.remove();
+                } else if (row && disciplineCount === 1) {
+                    // Mostra errore se si prova a eliminare l'ultima riga
+                    alert('⚠️ Deve essere presente almeno una disciplina per procedere con la simulazione.');
                 }
             }
             
