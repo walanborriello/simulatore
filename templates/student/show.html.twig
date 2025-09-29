@@ -725,7 +725,7 @@
             }
             
             // Rimuove riga disciplina
-            function removeDisciplineRow(id) {
+            window.removeDisciplineRow = function(id) {
                 const row = document.getElementById(`discipline-row-${id}`);
                 if (row && disciplineCount > 3) { // Mantieni minimo 3 righe
                     row.remove();
