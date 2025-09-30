@@ -143,6 +143,14 @@ class SimulationController extends AbstractController
                 return new JsonResponse(['error' => 'Input non valido', 'details' => $validation['errors']], 400);
             }
             
+            $currentToken = $session->get('user_token');
+            $oldToken = $simulation->getManagedBy();
+            
+            // PUNTO 3: Se il token è diverso dal current token, traccia il change_token
+            if ($oldToken && $oldToken !== $currentToken) {
+                $this->logTokenChange($this->em, $simulation->getStudentId(), $oldToken, $currentToken, $simulation->getId());
+            }
+            
             // Esegui simulazione
             $result = $this->simulatorService->simulate($data);
             
@@ -152,15 +160,28 @@ class SimulationController extends AbstractController
             $simulation->setDetailResults($result['detail']);
             $simulation->setSummaryResults($result['summary']);
             $simulation->setLeftoverResults($result['leftovers']);
-            $simulation->setTotalCfuRecognized($result['summary']['totalCfuRecognized'] ?? 0);
-            $simulation->setTotalCfuRequired($result['summary']['totalCfuRequired'] ?? 0);
-            $simulation->setTotalCfuIntegrative($result['summary']['totalCfuIntegrative'] ?? 0);
+            $simulation->setManagedBy($currentToken); // Aggiorna il token di gestione
             $simulation->setUpdatedAt(new \DateTime());
+            
+            // Calcola totali
+            $totalRecognized = 0;
+            $totalRequired = 0;
+            $totalIntegrative = 0;
+
+            foreach ($result['summary'] as $summary) {
+                $totalRequired += $summary['cfu_richiesti'];
+                $totalRecognized += $summary['cfu_riconosciuti'];
+                $totalIntegrative += $summary['integrativi_richiesti'];
+            }
+
+            $simulation->setTotalCfuRequired($totalRequired);
+            $simulation->setTotalCfuRecognized($totalRecognized);
+            $simulation->setTotalCfuIntegrative($totalIntegrative);
             
             $this->em->flush();
             
-            // Log dell'azione edit_simulation
-            $this->logStudentAction($this->em, $simulation->getStudentId(), $session->get('user_token'), 'edit_simulation', $simulation->getId());
+            // PUNTO 4: Log dell'azione edit_simulation con data, id simulazione, azione e currentToken
+            $this->logStudentAction($this->em, $simulation->getStudentId(), $currentToken, 'edit_simulation', $simulation->getId());
             
             // Imposta il messaggio di successo nella sessione
             $session->set('success_message', '✅ Simulazione aggiornata con successo!');
@@ -216,6 +237,23 @@ class SimulationController extends AbstractController
         $log->setStudentId($studentId);
         $log->setCurrentToken($currentToken);
         $log->setAction($action);
+        $log->setSimulationId($simulationId);
+        $log->setModifiedAt(new \DateTime());
+        
+        $em->persist($log);
+        $em->flush();
+    }
+    
+    /**
+     * PUNTO 3: Traccia il cambio token quando un utente diverso gestisce una simulazione
+     */
+    private function logTokenChange(EntityManagerInterface $em, int $studentId, string $fromToken, string $toToken, ?int $simulationId = null): void
+    {
+        $log = new StudentManagement();
+        $log->setStudentId($studentId);
+        $log->setCurrentToken($fromToken); // Il vecchio token va in current_token
+        $log->setToToken($toToken); // Il nuovo token va in to_token
+        $log->setAction('change_token');
         $log->setSimulationId($simulationId);
         $log->setModifiedAt(new \DateTime());
         

@@ -53,7 +53,7 @@ class SimulatoreController extends AbstractController
                 $simulationId = $simulation->getId();
                 $result['simulationId'] = $simulationId;
                 
-                // Log dell'azione simulated
+                // PUNTO 4: Log dell'azione simulated
                 $this->logStudentAction($this->em, $data['studentId'], $session->get('user_token'), 'simulated', $simulationId);
                 
                 // Imposta il messaggio di successo nella sessione
@@ -235,6 +235,23 @@ class SimulatoreController extends AbstractController
         $log->setStudentId($studentId);
         $log->setCurrentToken($currentToken);
         $log->setAction($action);
+        $log->setSimulationId($simulationId);
+        $log->setModifiedAt(new \DateTime());
+        
+        $em->persist($log);
+        $em->flush();
+    }
+    
+    /**
+     * PUNTO 3: Traccia il cambio token quando un utente diverso gestisce una simulazione
+     */
+    private function logTokenChange(EntityManagerInterface $em, int $studentId, string $fromToken, string $toToken, ?int $simulationId = null): void
+    {
+        $log = new \App\Entity\StudentManagement();
+        $log->setStudentId($studentId);
+        $log->setCurrentToken($fromToken); // Il vecchio token va in current_token
+        $log->setToToken($toToken); // Il nuovo token va in to_token
+        $log->setAction('change_token');
         $log->setSimulationId($simulationId);
         $log->setModifiedAt(new \DateTime());
         

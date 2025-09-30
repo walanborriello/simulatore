@@ -220,7 +220,7 @@ git push -u origin fase-1-repo-setup
 
 ## Passi operativi approccio al simulatore
     1. Nella pagina di creazione studente aggiungere un div che contiene il simulatore.
-    2. Una volta aggiunta l'anagrafica e fatta la simulazione si può procedere col salvataggio dell'anagrafica, della simulazione e di tracciare nella tabella `students_history` il current token e l'azione fatta. La pagina ora funziona esattamente come richiesto: un singolo pulsante "Salva Studente e Simulazione" che gestisce intelligentemente entrambi i casi, e un pulsante "Torna in Homepage" per uscire senza salvare.
+    2. Una volta aggiunta l'anagrafica e fatta la simulazione si può procedere col salvataggio dell'anagrafica, della simulazione e di tracciare nella tabella `students_history` il current token e l'azione fatta. Un singolo pulsante "Salva Studente e Simulazione" che gestisce intelligentemente entrambi i casi, e un pulsante "Torna in Homepage" per uscire senza salvare.
     3. Nella pagina di dettagli dello studente, oltre a esserci l'anagrafica, dovrà essere presente anche una tabella per le simulazioni fatte per lo studente selezionato (ogni studente può avere n simulazioni). La tabella manterrà lo stesso stile delle altre tabelle con paginazione e massimo 5 elementi per volta. 
     4. Sempre nella pagina di dettaglio, dovrà esserci in alto a destra un bottone "Simulatore" che cliccandolo apre lo stesso simulatore presente nel div di "Aggiungi studente", **SOLO** in questa pagina devi aggiungere questo div, che ti permettere di fare la simulazione e salvarla allo studente che stiamo visualizzando. 
 
@@ -232,8 +232,9 @@ git push -u origin fase-1-repo-setup
         2.3 `deleted` quando viene eliminato
         2.4 `simulated` quando viene creata una simulazione
         2.5 `edit_simulation` quando viene fatta una modifica su una simulazione
-    3. quando viene fatta un'azione sulle simulazioni, si deve tracciare la data di modifica, l'id della simulazione, l'azione fatta e il currentToken
-
+    3. Quando si va a modificare una simulazione, se a gestirlo è un token differente dal current token allora va tracciato prima il 
+    `change_token` dove metti il `current_token` il vecchio token e nel `to_token` il nuovo token. 
+    4. Quando viene fatta un'azione sulle simulazioni, si deve tracciare la data di modifica, l'id della simulazione, l'azione fatta e il currentToken. 
 
 ## Passi operativi form simulatore
     1. Validare input.  

@@ -49,7 +49,7 @@ class StudentController extends AbstractController
             $em->persist($student);
             $em->flush();
             
-            // Log dell'azione create
+            // PUNTO 4: Log dell'azione create
             $this->logStudentAction($em, $student->getId(), $currentToken, 'create');
             
             // Controlla se è una richiesta AJAX
@@ -143,11 +143,11 @@ class StudentController extends AbstractController
             
             $em->flush();
             
-            // Log dell'azione edit
+            // PUNTO 4: Log dell'azione edit
             $this->logStudentAction($em, $student->getId(), $currentToken, 'edit');
             
-            // Log del cambio token se è diverso
-            if ($oldToken !== $currentToken) {
+            // PUNTO 3: Log del cambio token se è diverso
+            if ($oldToken && $oldToken !== $currentToken) {
                 $this->logTokenChange($em, $student->getId(), $oldToken, $currentToken);
             }
             
@@ -171,7 +171,7 @@ class StudentController extends AbstractController
             throw $this->createNotFoundException('Studente non trovato');
         }
         
-        // Log dell'azione deleted prima di eliminare
+        // PUNTO 4: Log dell'azione deleted prima di eliminare
         $currentToken = $session->get('user_token');
         $this->logStudentAction($em, $student->getId(), $currentToken, 'deleted');
         
@@ -197,9 +197,9 @@ class StudentController extends AbstractController
     {
         $log = new StudentManagement();
         $log->setStudentId($studentId);
-        $log->setCurrentToken($toToken);
-        $log->setToToken($fromToken);
-        $log->setAction('user_changed');
+        $log->setCurrentToken($fromToken); // Il vecchio token va in current_token
+        $log->setToToken($toToken); // Il nuovo token va in to_token
+        $log->setAction('change_token');
         $log->setModifiedAt(new \DateTime());
         
         $em->persist($log);
