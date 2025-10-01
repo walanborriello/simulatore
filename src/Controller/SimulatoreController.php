@@ -120,6 +120,34 @@ class SimulatoreController extends AbstractController
         return new JsonResponse($ssdList);
     }
 
+    #[Route('/api/ssd-all', name: 'app_get_all_ssd', methods: ['GET'])]
+    public function getAllSsd(): JsonResponse
+    {
+        // Pre-carica tutti i dati SSD per tutti i CDL per evitare AJAX lente
+        $riconoscibiliRepo = $this->em->getRepository(\App\Entity\ZcfuRiconoscibile::class);
+        $riconoscibiliData = $riconoscibiliRepo->createQueryBuilder('r')
+            ->select('r.cdl, r.riconoscibile')
+            ->orderBy('r.cdl', 'ASC')
+            ->addOrderBy('r.riconoscibile', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        // Organizza i dati per CDL
+        $ssdByCdl = [];
+        foreach ($riconoscibiliData as $ric) {
+            $cdl = $ric['cdl'];
+            if (!isset($ssdByCdl[$cdl])) {
+                $ssdByCdl[$cdl] = [];
+            }
+            $ssdByCdl[$cdl][] = [
+                'id' => $ric['riconoscibile'],
+                'text' => $ric['riconoscibile']
+            ];
+        }
+
+        return new JsonResponse($ssdByCdl);
+    }
+
     #[Route('/api/simulation/{id}/delete', name: 'app_delete_simulation', methods: ['DELETE'])]
     public function deleteSimulation(int $id, SessionInterface $session): JsonResponse
     {

@@ -140,7 +140,7 @@
             display: flex;
             gap: 15px;
             margin-bottom: 15px;
-            align-items: end;
+            align-items: flex-start;
         }
         
         .discipline-row .form-group {
@@ -174,6 +174,9 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            align-self: flex-start;
+            height: 40px; /* Stessa altezza degli input */
+            margin-top: 35px;
         }
         
         .btn-remove-discipline:hover {
@@ -369,6 +372,33 @@
             padding: 4px 8px;
             border-radius: 4px;
             font-weight: 600;
+        }
+        
+        /* Stili per intestazioni cliccabili */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        
+        .sortable-header::after {
+            content: ' ↕';
+            opacity: 0.5;
+            font-size: 12px;
+        }
+        
+        .sortable-header.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+            color: #fff;
+        }
+        
+        .sortable-header.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+            color: #fff;
         }
         
         .pagination {
@@ -613,7 +643,7 @@
             
             <div class="page-actions">
                 <a href="/student/{{ student.id }}/edit" class="btn btn-primary">Modifica</a>
-                <a href="/student/{{ student.id }}/delete" class="btn btn-danger" onclick="return confirm('Sei sicuro di voler eliminare questo studente?')">Elimina</a>
+                <button type="button" class="btn btn-danger" onclick="showDeleteStudentModal()">Elimina</button>
                 <a href="/" class="btn btn-secondary">Torna alla Lista</a>
             </div>
             
@@ -642,7 +672,7 @@
                             <td>
                                 <div class="actions">
                                     <a href="/student/{{ student.id }}/simulation/{{ simulation.id }}" class="btn btn-primary btn-small" title="Visualizza/Modifica">📊</a>
-                                    <button class="btn btn-danger btn-small" onclick="showDeleteModal({{ simulation.id }}, '{{ simulation.cdl }}', '{{ simulation.createdAt|date('d/m/Y') }}', {{ simulation.totalCfuRecognized }})" title="Elimina Simulazione">🗑️</button>
+                                    <button class="btn btn-danger btn-small" onclick="showDeleteSimulationModal({{ simulation.id }}, '{{ simulation.cdl }}', '{{ simulation.createdAt|date('d/m/Y') }}', {{ simulation.totalCfuRecognized }})" title="Elimina Simulazione">🗑️</button>
                                 </div>
                             </td>
                         </tr>
@@ -687,6 +717,25 @@
                 <div class="results-container" id="results-container">
                     <h3 style="color: #E57552; margin-bottom: 20px;">Risultati Simulazione</h3>
                     
+                    <!-- Legenda Stati -->
+                    <div class="stato-legend" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #E57552;">
+                        <h5 style="margin: 0 0 10px 0; color: #E57552;">📋 Legenda Stati:</h5>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stato-tot">TOT</span>
+                                <span style="font-size: 14px;">= Totale (riconoscimento completo)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stato-parziale">PARZIALE</span>
+                                <span style="font-size: 14px;">= Parziale (riconoscimento parziale)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stato-non">NON</span>
+                                <span style="font-size: 14px;">= Non riconosciuto</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Tabella 1: Dettaglio -->
                     <div id="detail-table-container">
                         <h4>Dettaglio Riconoscimenti</h4>
@@ -698,6 +747,7 @@
                                     <th>Disciplina Esterna</th>
                                     <th>CFU Assegnati</th>
                                     <th>Priorità</th>
+                                    <th>Stato</th>
                                     <th>Note</th>
                                 </tr>
                             </thead>
@@ -756,12 +806,12 @@
             </div>
         </div>
         
-        <!-- Modale Conferma Eliminazione -->
-        <div class="modal-overlay" id="delete-modal" style="display: none;">
+        <!-- Modale Conferma Eliminazione Simulazione -->
+        <div class="modal-overlay" id="delete-simulation-modal" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>🗑️ Conferma Eliminazione</h3>
-                    <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+                    <h3>🗑️ Conferma Eliminazione Simulazione</h3>
+                    <button class="modal-close" onclick="closeDeleteSimulationModal()">&times;</button>
                 </div>
                 <div class="modal-body">
                     <p>Sei sicuro di voler eliminare questa simulazione?</p>
@@ -773,8 +823,62 @@
                     <p class="warning-text">⚠️ Questa azione non può essere annullata.</p>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="closeDeleteModal()">Annulla</button>
+                    <button class="btn btn-secondary" onclick="closeDeleteSimulationModal()">Annulla</button>
                     <button class="btn btn-danger" onclick="confirmDeleteSimulation()">Elimina</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale Conferma Eliminazione Studente -->
+        <div class="modal-overlay" id="delete-student-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🗑️ Conferma Eliminazione Studente</h3>
+                    <button class="modal-close" onclick="closeDeleteStudentModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Sei sicuro di voler eliminare questo studente?</p>
+                    <div class="student-info">
+                        <strong>Nome:</strong> {{ student.firstName }} {{ student.lastName }}<br>
+                        <strong>Email:</strong> {{ student.email }}
+                    </div>
+                    <p class="warning-text">⚠️ Questa azione non può essere annullata e eliminerà anche tutte le simulazioni associate.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeDeleteStudentModal()">Annulla</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteStudentFromModal()">Elimina</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale Avviso Disciplina -->
+        <div class="modal-overlay" id="discipline-warning-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚠️ Avviso</h3>
+                    <button class="modal-close" onclick="closeDisciplineWarningModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Deve essere presente almeno una disciplina per procedere con la simulazione.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeDisciplineWarningModal()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale Nessuna Simulazione da Salvare -->
+        <div class="modal-overlay" id="no-simulation-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚠️ Nessuna Simulazione</h3>
+                    <button class="modal-close" onclick="closeNoSimulationModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Nessuna simulazione da salvare. Esegui prima una simulazione.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeNoSimulationModal()">OK</button>
                 </div>
             </div>
         </div>
@@ -825,6 +929,9 @@
                 
                 // Inizializza paginazione simulazioni
                 initSimulationsPagination();
+                
+                // Aggiungi event listeners per ordinamento tabelle (solo se necessario)
+                setupSortableHeaders();
             });
             
             // Toggle simulatore
@@ -1064,9 +1171,7 @@
                         <input type="number" name="cfu_${disciplineCount}" min="1" max="30" placeholder="CFU">
                         <div class="error-message" id="cfu_${disciplineCount}_error"></div>
                     </div>
-                    <div class="form-group">
-                        <button type="button" class="btn-remove-discipline" onclick="removeDisciplineRow(${disciplineCount})">🗑️</button>
-                    </div>
+                    <button type="button" class="btn-remove-discipline" onclick="removeDisciplineRow(${disciplineCount})">🗑️</button>
                 `;
                 
                 container.appendChild(row);
@@ -1105,7 +1210,7 @@
                     disciplineCount--; // Decrementa il contatore
                 } else if (row && disciplineCount === 1) {
                     // Mostra errore se si prova a eliminare l'ultima riga
-                    alert('⚠️ Deve essere presente almeno una disciplina per procedere con la simulazione.');
+                    showDisciplineWarningModal();
                 }
             }
             
@@ -1169,18 +1274,22 @@
                     const nomeInput = row.querySelector('input[name^="nome_"]');
                     const cfuInput = row.querySelector('input[name^="cfu_"]');
                     
+                    // Estrai il numero della disciplina dal name del campo
+                    const ssdName = ssdSelect.name;
+                    const disciplineNumber = ssdName.split('_')[1];
+                    
                     if (!ssdSelect.value) {
-                        showError(`ssd_${index + 1}_error`, 'Seleziona il settore scientifico disciplinare della materia che hai sostenuto.');
+                        showError(`ssd_${disciplineNumber}_error`, 'Seleziona il settore scientifico disciplinare della materia che hai sostenuto.');
                         isValid = false;
                     }
                     
                     if (!nomeInput.value.trim()) {
-                        showError(`nome_${index + 1}_error`, 'Inserisci il nome completo della disciplina che hai sostenuto.');
+                        showError(`nome_${disciplineNumber}_error`, 'Inserisci il nome completo della disciplina che hai sostenuto.');
                         isValid = false;
                     }
                     
                     if (!cfuInput.value || cfuInput.value < 1 || cfuInput.value > 30) {
-                        showError(`cfu_${index + 1}_error`, 'Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30).');
+                        showError(`cfu_${disciplineNumber}_error`, 'Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30).');
                         isValid = false;
                     }
                 });
@@ -1245,11 +1354,148 @@
                 return values[values.length - 1] || '';
             }
             
+            // Funzione per ordinare i dati per colonna
+            function sortDataByColumn(data, column, direction = 'asc') {
+                if (!data || !Array.isArray(data)) return data;
+
+                return data.sort((a, b) => {
+                    let valueA = a[column];
+                    let valueB = b[column];
+
+                    // Gestione valori null/undefined
+                    if (valueA == null) valueA = '';
+                    if (valueB == null) valueB = '';
+
+                    // Conversione a stringa per confronto
+                    valueA = String(valueA).toLowerCase();
+                    valueB = String(valueB).toLowerCase();
+
+                    // Ordinamento numerico per colonne specifiche
+                    if (['cfu_richiesti', 'cfu_assegnati', 'cfu_riconosciuti', 'integrativi_richiesti', 'cfu_residui', 'priorita'].includes(column)) {
+                        valueA = parseFloat(valueA) || 0;
+                        valueB = parseFloat(valueB) || 0;
+                    }
+
+                    if (direction === 'asc') {
+                        return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+                    } else {
+                        return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+                    }
+                });
+            }
+
+            // Funzione per gestire il click sulle intestazioni
+            function handleHeaderClick(tableId, column) {
+                const table = document.getElementById(tableId);
+                const header = table.querySelector(`th[data-sort="${column}"]`);
+                
+                // Determina la direzione dell'ordinamento PRIMA di rimuovere le classi
+                let direction = 'asc';
+                if (header.classList.contains('sort-asc')) {
+                    direction = 'desc';
+                } else if (header.classList.contains('sort-desc')) {
+                    direction = 'asc';
+                }
+                
+                // Rimuovi classi di ordinamento da tutte le intestazioni di questa tabella
+                table.querySelectorAll('th.sortable-header').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                });
+
+                // Aggiungi la classe appropriata all'header corrente
+                if (direction === 'asc') {
+                    header.classList.add('sort-asc');
+                } else {
+                    header.classList.add('sort-desc');
+                }
+
+                // Ordina i dati
+                const currentData = window.currentResults[tableId.replace('-table', '')] || [];
+                const sortedData = sortDataByColumn([...currentData], column, direction);
+                
+                // Aggiorna i risultati
+                window.currentResults[tableId.replace('-table', '')] = sortedData;
+                
+                // Ridisegna la tabella
+                displayTable(tableId, sortedData, tableId.replace('-table', '-pagination'));
+            }
+
+            // Funzione per configurare header ordinabili solo se necessario
+            function setupSortableHeaders() {
+                // Questa funzione verrà chiamata dopo che i risultati sono stati caricati
+                // per determinare se attivare l'ordinamento
+            }
+
+            // Funzione per attivare/disattivare ordinamento basato sul numero di elementi
+            function updateSortableHeaders() {
+                const tables = ['detail-table', 'summary-table', 'leftover-table'];
+                
+                tables.forEach(tableId => {
+                    const table = document.getElementById(tableId);
+                    if (!table) return;
+                    
+                    const dataKey = tableId.replace('-table', '');
+                    const dataCount = window.currentResults ? (window.currentResults[dataKey] || []).length : 0;
+                    
+                    // Se ci sono più di 5 elementi, attiva l'ordinamento
+                    if (dataCount > 5) {
+                        table.querySelectorAll('th').forEach(th => {
+                            th.classList.add('sortable-header');
+                            if (!th.getAttribute('data-sort')) {
+                                // Aggiungi data-sort se non presente
+                                const text = th.textContent.trim();
+                                const sortMap = {
+                                    'Disciplina UniMarconi': 'disciplina_unimarconi',
+                                    'CFU Richiesti': 'cfu_richiesti',
+                                    'Disciplina Esterna': 'disciplina_esterna',
+                                    'CFU Assegnati': 'cfu_assegnati',
+                                    'Priorità': 'priorita',
+                                    'Stato': 'stato',
+                                    'Note': 'note',
+                                    'CFU Riconosciuti': 'cfu_riconosciuti',
+                                    'Integrativi Richiesti': 'integrativi_richiesti',
+                                    'CFU Residui': 'cfu_residui',
+                                    'Motivazione': 'motivazione'
+                                };
+                                th.setAttribute('data-sort', sortMap[text] || '');
+                            }
+                        });
+                        
+                        // Aggiungi event listeners se non già presenti
+                        table.querySelectorAll('th.sortable-header').forEach(header => {
+                            if (!header.hasAttribute('data-sort-listener')) {
+                                header.setAttribute('data-sort-listener', 'true');
+                                header.addEventListener('click', function() {
+                                    const column = this.getAttribute('data-sort');
+                                    handleHeaderClick(tableId, column);
+                                });
+                            }
+                        });
+                    } else {
+                        // Se 5 o meno elementi, disattiva l'ordinamento
+                        table.querySelectorAll('th').forEach(th => {
+                            th.classList.remove('sortable-header', 'sort-asc', 'sort-desc');
+                            th.removeAttribute('data-sort-listener');
+                        });
+                    }
+                });
+            }
+
             // Mostra risultati
             function displayResults(results) {
                 console.log('📊 Displaying results:', results);
                 const container = document.getElementById('results-container');
                 container.style.display = 'block';
+                
+                // Salva i risultati per l'ordinamento
+                window.currentResults = {
+                    detail: results.detail || [],
+                    summary: results.summary || [],
+                    leftover: results.leftover || []
+                };
+                
+                // Aggiorna configurazione header ordinabili
+                updateSortableHeaders();
                 
                 // Ordina i risultati: riconosciuti e parziali prima
                 if (results.detail) {
@@ -1298,20 +1544,69 @@
                     
                     pageData.forEach(item => {
                         const row = tbody.insertRow();
-                        Object.values(item).forEach((value, index) => {
-                            const cell = row.insertCell();
+                        
+                        // Gestione specifica per tabella detail
+                        if (tableId === 'detail-table') {
+                            // Disciplina UniMarconi
+                            const cell1 = row.insertCell();
+                            cell1.textContent = item.disciplina_unimarconi || '';
                             
-                            // Applica stili per stato (ultima colonna)
-                            if (index === Object.keys(item).length - 1 && value && ['tot', 'parziale', 'non'].includes(value.toLowerCase())) {
-                                console.log(`Applicando stile per stato: ${value}`);
-                                const span = document.createElement('span');
-                                span.textContent = value.toUpperCase();
-                                span.className = `stato-${value.toLowerCase()}`;
-                                cell.appendChild(span);
+                            // CFU Richiesti
+                            const cell2 = row.insertCell();
+                            cell2.textContent = item.cfu_richiesti || '';
+                            
+                            // Disciplina Esterna
+                            const cell3 = row.insertCell();
+                            cell3.textContent = item.disciplina_esterna || '';
+                            
+                            // CFU Assegnati
+                            const cell4 = row.insertCell();
+                            cell4.textContent = item.cfu_assegnati || '';
+                            
+                            // Priorità con nota per 999
+                            const cell5 = row.insertCell();
+                            const priorita = parseInt(item.priorita) || 0;
+                            if (priorita === 999) {
+                                cell5.innerHTML = `${priorita} <span style="color: #E57552; font-size: 12px;" title="Priorità 999: Disciplina non riconosciuta o non disponibile">⚠️</span>`;
                             } else {
-                                cell.textContent = value || '';
+                                cell5.textContent = priorita;
                             }
-                        });
+                            
+                            // Stato
+                            const cell6 = row.insertCell();
+                            if (item.stato && ['tot', 'parziale', 'non'].includes(item.stato.toLowerCase())) {
+                                const span = document.createElement('span');
+                                span.textContent = item.stato.toUpperCase();
+                                span.className = `stato-${item.stato.toLowerCase()}`;
+                                cell6.appendChild(span);
+                            } else {
+                                cell6.textContent = item.stato || '';
+                            }
+                            
+                            // Note con spiegazione per priorità 999
+                            const cell7 = row.insertCell();
+                            let noteText = item.note || '';
+                            if (priorita === 999 && !noteText) {
+                                noteText = 'Disciplina non riconosciuta o non disponibile per questo corso di laurea';
+                            }
+                            cell7.textContent = noteText;
+                        } else {
+                            // Gestione normale per altre tabelle
+                            Object.values(item).forEach((value, index) => {
+                                const cell = row.insertCell();
+                                
+                                // Applica stili per stato (ultima colonna)
+                                if (index === Object.keys(item).length - 1 && value && ['tot', 'parziale', 'non'].includes(value.toLowerCase())) {
+                                    console.log(`Applicando stile per stato: ${value}`);
+                                    const span = document.createElement('span');
+                                    span.textContent = value.toUpperCase();
+                                    span.className = `stato-${value.toLowerCase()}`;
+                                    cell.appendChild(span);
+                                } else {
+                                    cell.textContent = value || '';
+                                }
+                            });
+                        }
                     });
                     
                     // Paginazione migliorata (massimo 5 pulsanti)
@@ -1369,7 +1664,7 @@
             // Salva simulazione
             async function saveSimulation() {
                 if (!currentResults) {
-                    alert('Nessuna simulazione da salvare. Esegui prima una simulazione.');
+                    showNoSimulationModal();
                     return;
                 }
                 
@@ -1422,22 +1717,54 @@
             // Variabili per il modale di eliminazione
             let simulationToDelete = null;
             
-            // Funzioni per il modale di eliminazione
-            function showDeleteModal(simulationId, cdl, date, cfuRecognized) {
+            // Funzioni per il modale di eliminazione simulazione
+            function showDeleteSimulationModal(simulationId, cdl, date, cfuRecognized) {
                 simulationToDelete = simulationId;
                 
                 document.getElementById('modal-cdl').textContent = cdl;
                 document.getElementById('modal-date').textContent = date;
                 document.getElementById('modal-cfu-rec').textContent = cfuRecognized;
                 
-                document.getElementById('delete-modal').style.display = 'flex';
+                document.getElementById('delete-simulation-modal').style.display = 'flex';
             }
             
-            function closeDeleteModal(resetSimulationId = true) {
-                document.getElementById('delete-modal').style.display = 'none';
+            function closeDeleteSimulationModal(resetSimulationId = true) {
+                document.getElementById('delete-simulation-modal').style.display = 'none';
                 if (resetSimulationId) {
                     simulationToDelete = null;
                 }
+            }
+            
+            // Funzioni per il modale di eliminazione studente
+            function showDeleteStudentModal() {
+                document.getElementById('delete-student-modal').style.display = 'flex';
+            }
+            
+            function closeDeleteStudentModal() {
+                document.getElementById('delete-student-modal').style.display = 'none';
+            }
+            
+            function confirmDeleteStudentFromModal() {
+                closeDeleteStudentModal();
+                window.location.href = `/student/{{ student.id }}/delete`;
+            }
+            
+            // Funzioni per il modale avviso disciplina
+            function showDisciplineWarningModal() {
+                document.getElementById('discipline-warning-modal').style.display = 'flex';
+            }
+            
+            function closeDisciplineWarningModal() {
+                document.getElementById('discipline-warning-modal').style.display = 'none';
+            }
+            
+            // Funzioni per il modale nessuna simulazione
+            function showNoSimulationModal() {
+                document.getElementById('no-simulation-modal').style.display = 'flex';
+            }
+            
+            function closeNoSimulationModal() {
+                document.getElementById('no-simulation-modal').style.display = 'none';
             }
             
             async function confirmDeleteSimulation() {
@@ -1475,11 +1802,20 @@
                 }
             }
             
-            // Chiudi modale cliccando fuori
+            // Chiudi modali cliccando fuori
             document.addEventListener('click', function(e) {
-                const modal = document.getElementById('delete-modal');
-                if (e.target === modal) {
-                    closeDeleteModal();
+                const simulationModal = document.getElementById('delete-simulation-modal');
+                const studentModal = document.getElementById('delete-student-modal');
+                const disciplineModal = document.getElementById('discipline-warning-modal');
+                
+                if (e.target === simulationModal) {
+                    closeDeleteSimulationModal();
+                }
+                if (e.target === studentModal) {
+                    closeDeleteStudentModal();
+                }
+                if (e.target === disciplineModal) {
+                    closeDisciplineWarningModal();
                 }
             });
             

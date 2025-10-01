@@ -32,6 +32,28 @@ class StudentController extends AbstractController
             ->getQuery()
             ->getArrayResult();
         
+        // Pre-carica tutti i dati SSD per tutti i CDL per evitare chiamate AJAX lente
+        $riconoscibiliRepo = $em->getRepository(\App\Entity\ZcfuRiconoscibile::class);
+        $riconoscibiliData = $riconoscibiliRepo->createQueryBuilder('r')
+            ->select('r.cdl, r.riconoscibile')
+            ->orderBy('r.cdl', 'ASC')
+            ->addOrderBy('r.riconoscibile', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        // Organizza i dati per CDL
+        $allSsdData = [];
+        foreach ($riconoscibiliData as $ric) {
+            $cdl = $ric['cdl'];
+            if (!isset($allSsdData[$cdl])) {
+                $allSsdData[$cdl] = [];
+            }
+            $allSsdData[$cdl][] = [
+                'id' => $ric['riconoscibile'],
+                'text' => $ric['riconoscibile']
+            ];
+        }
+        
         if ($request->isMethod('POST')) {
             $currentToken = $session->get('user_token');
             
@@ -49,8 +71,8 @@ class StudentController extends AbstractController
             $em->persist($student);
             $em->flush();
             
-            // PUNTO 4: Log dell'azione create
-            $this->logStudentAction($em, $student->getId(), $currentToken, 'create');
+            // PUNTO 4: Log dell'azione create_student
+            $this->logStudentAction($em, $student->getId(), $currentToken, 'create_student');
             
             // Controlla se è una richiesta AJAX
             if ($request->isXmlHttpRequest() || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
@@ -68,7 +90,8 @@ class StudentController extends AbstractController
         
         return $this->render('student/new.html.twig', [
             'student' => $student,
-            'cdlOptions' => $cdlData
+            'cdlOptions' => $cdlData,
+            'allSsdData' => $allSsdData // Tutti i dati SSD organizzati per CDL
         ]);
     }
     
@@ -143,8 +166,8 @@ class StudentController extends AbstractController
             
             $em->flush();
             
-            // PUNTO 4: Log dell'azione edit
-            $this->logStudentAction($em, $student->getId(), $currentToken, 'edit');
+            // PUNTO 4: Log dell'azione edit_student
+            $this->logStudentAction($em, $student->getId(), $currentToken, 'edit_student');
             
             // PUNTO 3: Log del cambio token se è diverso
             if ($oldToken && $oldToken !== $currentToken) {
@@ -171,14 +194,29 @@ class StudentController extends AbstractController
             throw $this->createNotFoundException('Studente non trovato');
         }
         
-        // PUNTO 4: Log dell'azione deleted prima di eliminare
+        // PUNTO 4: Log dell'azione delete_student prima di eliminare
         $currentToken = $session->get('user_token');
-        $this->logStudentAction($em, $student->getId(), $currentToken, 'deleted');
+        $this->logStudentAction($em, $student->getId(), $currentToken, 'delete_student');
         
+        // CANCELLAZIONE A CASCATA: Elimina tutte le simulazioni associate allo studente
+        $simulations = $em->getRepository(\App\Entity\Simulation::class)
+            ->createQueryBuilder('s')
+            ->where('s.studentId = :studentId')
+            ->setParameter('studentId', $id)
+            ->getQuery()
+            ->getResult();
+        
+        foreach ($simulations as $simulation) {
+            // Log dell'eliminazione di ogni simulazione
+            $this->logStudentAction($em, $id, $currentToken, 'simulation_deleted', $simulation->getId());
+            $em->remove($simulation);
+        }
+        
+        // Elimina lo studente
         $em->remove($student);
         $em->flush();
         
-        $session->set('success_message', 'Studente eliminato con successo');
+        $session->set('success_message', 'Studente e simulazioni associate eliminate con successo');
         return $this->redirectToRoute('app_index');
     }
     

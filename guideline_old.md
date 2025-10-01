@@ -160,9 +160,7 @@ git checkout -b fase-1-repo-setup master
 ``` bash
 git add .
 git status   # verifica esclusioni
-git commit -m "Fase 1
-> **Nota operativa**: `logo.png`, `favicon.ico` e `schema.sql` si trovano **allo stesso livello** di `guideline.md`. In Fase 2 CURSOR deve copiare `logo.png` e `favicon.ico` in `public/` e importare `schema.sql` nel DB locale.
-: setup repo + .gitignore (esclusi Docker, .env e build)"
+git commit -m "Fase 1: setup repo + .gitignore (esclusi Docker, .env e build)"
 git push -u origin fase-1-repo-setup
 ```
 
@@ -199,7 +197,7 @@ git push -u origin fase-1-repo-setup
 -   Pagine `newStudent`, `editStudent`, `showStudent`. 
 -   In homepage il tasto `aggiungi studente` deve essere posizionato in alto a destra del body.
 -   In homepage devono esserci i filtri della tabella degli studenti che viene mostrata e che ci siano anche i filtri per `nome`, `cognome`, `email`, `codice fiscale` degli studenti e un flag per filtrare solo gli studenti che abbiano il `managedBy` dell'utente loggato e quindi della variabile salvata in sessione `user_token` 
--   La form deve contenere `nome`, `cognome`, `data di nascita`, `data di registrazione`, `email` con verifica validazione email (usa qualche algoritmo email), `codice fiscale` con validazione validità (non solo lunghezza ma anche algoritmo di validazione) e deve essere univoco, `ateneo di provenienza`, `corso di studio di interesse`, `telefono` e questi devono essere tutti campi obbligatori e salvare in `managedBy` il token dell'utente loggato.
+-   La form deve contenere `nome`, `cognome`, `data di registrazione`, `email` con verifica validazione email, `codice fiscale` con validazione validità e deve essere univoco, `ateneo di provenienza`, `corso di studio di interesse`, `telefono` e questi devono essere tutti campi obbligatori e salvare in `managedBy` il token dell'utente loggato.
 - Nel caso in cui un utente loggato prende in gestione uno studente con token differente allora in fase di salvataggio studente viene aggiornato il campo `managedBy` col nuovo token.
 - Pulsante elimina studente nella tabella in home nella colonna azioni e nel visualizza.
 
@@ -229,16 +227,14 @@ git push -u origin fase-1-repo-setup
 ## Passi operativi per Student history
     1. Tabella a db `students_history` cambio token su simulazione e/o salvataggio dello studente in fase di modifica o nuova creazione (che verrà implementata in fase 5 quindi non implementare nulla e se lo hai fatto elimina) se chi sta facendo la modifica dello studente ha un token differente da quello associato allo studente con action `user_changed`.
     2. Nella stessa tabella salvare ogni azione fatta sullo studente:
-        2.1 `create_student` quando l'utente viene creato
-        2.2 `edit_student` quando l'utente viene modificato
-        2.3 `delete_student` quando viene eliminato
+        2.1 `create` quando l'utente viene creato
+        2.2 `edit` quando l'utente viene modificato
+        2.3 `deleted` quando viene eliminato
         2.4 `simulated` quando viene creata una simulazione
         2.5 `edit_simulation` quando viene fatta una modifica su una simulazione
-        2.6 `simulation_deleted` quando viene eliminata una simulazione (sia singolarmente che in cascata)
     3. Quando si va a modificare una simulazione, se a gestirlo è un token differente dal current token allora va tracciato prima il 
     `change_token` dove metti il `current_token` il vecchio token e nel `to_token` il nuovo token. 
-    4. Quando viene fatta un'azione sulle simulazioni, si deve tracciare la data di modifica, l'id della simulazione, l'azione fatta e il currentToken.
-    5. **IMPORTANTE - Eliminazione a cascata**: Quando viene eliminato uno studente, devono essere eliminate automaticamente anche tutte le simulazioni associate ad esso (cascade delete). Questo garantisce l'integrità referenziale dei dati e previene simulazioni orfane nel database. 
+    4. Quando viene fatta un'azione sulle simulazioni, si deve tracciare la data di modifica, l'id della simulazione, l'azione fatta e il currentToken. 
 
 ## Passi operativi form simulatore
     1. Validare input.  
@@ -394,7 +390,6 @@ Cerca di evitare errori grafici. Il brand-text ben definito che non sia di distu
         9. Lo scroll automatico deve avvenire SOLO quando si clicca "Calcola Simulazione" e ci sono errori di validazione. NON deve avvenire scroll quando si seleziona un SSD o si cambia il valore di una select durante la normale compilazione del form e al change delle option di "Seleziona corso di laurea" fai una transaction (lenta) scroll verso il div che contiene il titolo della form sottostante.
         10. I messaggi di errore sul singolo campo devono sparire in caso di click sul campo stesso o in caso di change del valore della select (usa la change di select2 altrimenti non lo riconoscerai mai).
         11. Non mi devi assolutamente cambiare la lunghezza delle select, devono essere al 100% dello spazio disponibile nemmeno quando mi mostri gli errori.
-        12. Gli alert confirm e alert semplici gestiscili tutti con una modale bootstrap.
 
     ### Gestione form discipline
         - La sezione "Discipline Esterne da Riconoscere" deve essere inizialmente nascosta
@@ -415,15 +410,14 @@ Cerca di evitare errori grafici. Il brand-text ben definito che non sia di distu
 
 ## 15) Output: le tre tabelle
 
-- **Tabella 1 — Dettaglio riconoscimenti**: disciplina Unimarconi, CFU richiesti, disciplina esterna, CFU assegnati, priorità,stato, note.  
+- **Tabella 1 — Dettaglio riconoscimenti**: disciplina Unimarconi, CFU richiesti, disciplina esterna, CFU assegnati, priorità, note.  
 - **Tabella 2 — Riepilogo**: disciplina Unimarconi, CFU richiesti, CFU riconosciuti, integrativi richiesti, stato (tot/parziale/non).  
 - **Tabella 3 — Rimanenze**: disciplina esterna, CFU residui, motivazione (no rule, maxCFU superato, ecc.).  
 ### Stile tabelle
-    - Fai una legenda degli stati
     - Le tre tabelle dovranno avere uno stile chiaro, sfruttare il 100% dello spazio disponibile e magari per tutte le righe sceglierei due colori `#fff` e qualcosa tendente al grigio chiaro per fare contrasto per differenziarle l'una dall'altra.
     - Aggiungi la paginazione a queste tre tabelle, dando un massimo di 5 righe in visualizzazione.
     - Mantieni la stessa lunghezza per ogni view nella paginazione, se magari ti trovi un testo troppo lungo allora manda a capo.
-    - Le tre tabelle sia in crea studente che modifica simulazione devono avere il campo head cliccabile per poter ordinare gli elementi, ad esempio "disciplina unimarconi" cliccandolo una volta lo ordina dalla A alla Z e cliccandolo una seconda volta dalla Z alla A. Cosi anche tutti gli altri campi. Aggiungilo **Solo** se supera i 5 elementi per tabella.
+
 
 ------------------------------------------------------------------------
 

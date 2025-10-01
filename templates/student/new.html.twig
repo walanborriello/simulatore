@@ -75,10 +75,22 @@
             margin-top: 40px;
             padding: 20px;
             text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         
         .final-actions .btn {
-            margin: 0 10px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 200px;
         }
         
         small {
@@ -111,7 +123,7 @@
             display: flex;
             gap: 15px;
             margin-bottom: 15px;
-            align-items: end;
+            align-items: flex-start;
         }
         
         .discipline-row .form-group {
@@ -145,6 +157,9 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            align-self: flex-start;
+            height: 40px; /* Stessa altezza degli input */
+            margin-top: 35px;
         }
         
         .btn-remove-discipline:hover {
@@ -204,14 +219,30 @@
                     text-align: center;
                 }
                 
-                .loading-spinner {
-                    width: 60px;
-                    height: 60px;
+                .loading-container {
+                    width: 120px;
+                    height: 120px;
+                    position: relative;
+                    margin: 0 auto;
+                }
+                
+                .loading-logo {
+                    width: 50px;
+                    height: 25px;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    animation: pulse 1.5s ease-in-out infinite;
+                }
+                
+                .loading-ring {
+                    width: 120px;
+                    height: 120px;
                     border: 4px solid #f3f3f3;
                     border-top: 4px solid #E57552;
                     border-radius: 50%;
                     animation: spin 1s linear infinite;
-                    margin: 0 auto 20px;
                 }
                 
                 @keyframes spin {
@@ -219,10 +250,9 @@
                     100% { transform: rotate(360deg); }
                 }
                 
-                .loading-text {
-                    color: #E57552;
-                    font-size: 16px;
-                    font-weight: 500;
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
                 }
                 
                 /* Forza visibilità search box Select2 */
@@ -362,6 +392,33 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        
+        /* Stili per intestazioni cliccabili */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        
+        .sortable-header::after {
+            content: ' ↕';
+            opacity: 0.5;
+            font-size: 12px;
+        }
+        
+        .sortable-header.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+            color: #fff;
+        }
+        
+        .sortable-header.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+            color: #fff;
+        }
 {% endblock %}
 
 {% block content %}
@@ -443,6 +500,25 @@
             <div class="results-container" id="results-container">
                 <h3 style="color: #E57552; margin-bottom: 20px;">Risultati Simulazione</h3>
                 
+                <!-- Legenda Stati -->
+                <div class="stato-legend" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #E57552;">
+                    <h5 style="margin: 0 0 10px 0; color: #E57552;">📋 Legenda Stati:</h5>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span class="stato-tot">TOT</span>
+                            <span style="font-size: 14px;">= Totale (riconoscimento completo)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span class="stato-parziale">PARZIALE</span>
+                            <span style="font-size: 14px;">= Parziale (riconoscimento parziale)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span class="stato-non">NON</span>
+                            <span style="font-size: 14px;">= Non riconosciuto</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Tabella 1: Dettaglio -->
                 <div id="detail-table-container">
                     <h4>Dettaglio Riconoscimenti</h4>
@@ -454,6 +530,7 @@
                                 <th>Disciplina Esterna</th>
                                 <th>CFU Assegnati</th>
                                 <th>Priorità</th>
+                                <th>Stato</th>
                                 <th>Note</th>
                             </tr>
                         </thead>
@@ -465,6 +542,16 @@
                 <!-- Tabella 2: Riepilogo -->
                 <div id="summary-table-container">
                     <h4>Riepilogo</h4>
+                    
+                    <!-- Legenda Stati -->
+                    <div class="legend-container" style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #E57552;">
+                        <div style="display: flex; align-items: center; gap: 15px; font-size: 14px; flex-wrap: wrap;">
+                            <strong style="color: #E57552;">Legenda Stati:</strong>
+                            <span class="stato-tot">TOT</span> = Riconosciuto totalmente
+                            <span class="stato-parziale">PARZIALE</span> = Riconosciuto parzialmente  
+                            <span class="stato-non">NON</span> = Non riconosciuto
+                        </div>
+                    </div>
                     <table class="results-table" id="summary-table">
                         <thead>
                             <tr>
@@ -501,10 +588,10 @@
         
         <!-- Pulsanti Finali -->
         <div class="final-actions">
-            <button type="button" class="btn btn-primary btn-large" id="save-student-simulation-btn" onclick="saveStudentAndSimulation()">
+            <button type="button" class="btn btn-primary" id="save-student-simulation-btn" onclick="saveStudentAndSimulation()">
                 💾 Salva Studente e Simulazione
             </button>
-            <a href="/" class="btn btn-secondary btn-large">
+            <a href="/" class="btn btn-secondary">
                 🏠 Torna in Homepage
             </a>
         </div>
@@ -512,8 +599,26 @@
         <!-- Loading Overlay -->
         <div class="loading-overlay" id="loading-overlay">
             <div class="loading-content">
-                <div class="loading-spinner"></div>
-                <div class="loading-text">Caricamento in corso...</div>
+                <div class="loading-container">
+                    <div class="loading-ring"></div>
+                    <img src="/logo.png" alt="Loading" class="loading-logo">
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale Avviso Disciplina -->
+        <div class="modal-overlay" id="discipline-warning-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚠️ Avviso</h3>
+                    <button class="modal-close" onclick="closeDisciplineWarningModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Deve essere presente almeno una disciplina per procedere con la simulazione.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeDisciplineWarningModal()">OK</button>
+                </div>
             </div>
         </div>
         
@@ -523,6 +628,8 @@
             let currentCdl = '';
             let ssdOptions = [];
             let currentResults = null;
+            // Dati SSD pre-caricati dal controller (evita chiamate AJAX lente)
+            const allSsdData = {{ allSsdData|json_encode|raw }};
             
             // Inizializzazione
             document.addEventListener('DOMContentLoaded', function() {
@@ -536,6 +643,68 @@
                 console.log('🚀 Inizializzazione simulatore...');
                 console.log('jQuery disponibile:', typeof $ !== 'undefined');
                 console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
+                
+                // Aggiungi event listeners per ordinamento tabelle (solo se necessario)
+                setupSortableHeaders();
+                
+                // Aggiungi event listeners per pulire errori sui campi del form studente
+                const studentFields = ['firstName', 'lastName', 'email', 'phone', 'fiscalCode', 'codiceFiscale', 'ateneoProvenienza', 'corsoStudioInteresse', 'simulator-cdl'];
+                studentFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        console.log('🔗 Aggiungo event listeners per campo:', fieldId);
+                        
+                        // Gestione speciale per il campo CDL (select)
+                        if (fieldId === 'simulator-cdl') {
+                            // Per il select CDL, usa Select2 se disponibile
+                            if (typeof $ !== 'undefined' && $.fn.select2) {
+                                $(field).on('change', () => {
+                                    console.log('🔄 Change su CDL (Select2):', fieldId);
+                                    clearFieldError(field);
+                                });
+                                $(field).on('select2:open', () => {
+                                    console.log('🎯 Apertura Select2 CDL:', fieldId);
+                                    clearFieldError(field);
+                                });
+                            } else {
+                                field.addEventListener('change', () => {
+                                    console.log('🔄 Change su CDL (standard):', fieldId);
+                                    clearFieldError(field);
+                                });
+                            }
+                            field.addEventListener('focus', () => {
+                                console.log('🎯 Focus su CDL:', fieldId);
+                                clearFieldError(field);
+                            });
+                            field.addEventListener('click', () => {
+                                console.log('👆 Click su CDL:', fieldId);
+                                clearFieldError(field);
+                            });
+                        } else {
+                            // Per gli altri campi (input text)
+                            field.addEventListener('focus', () => {
+                                console.log('🎯 Focus su campo:', fieldId);
+                                clearFieldError(field);
+                            });
+                            field.addEventListener('input', () => {
+                                console.log('⌨️ Input su campo:', fieldId);
+                                clearFieldError(field);
+                            });
+                            field.addEventListener('change', () => {
+                                console.log('🔄 Change su campo:', fieldId);
+                                clearFieldError(field);
+                            });
+                            field.addEventListener('click', () => {
+                                console.log('👆 Click su campo:', fieldId);
+                                clearFieldError(field);
+                            });
+                        }
+                    } else {
+                        console.warn('⚠️ Campo non trovato:', fieldId);
+                    }
+                });
+                
+                // I dati SSD sono già disponibili dal controller
                 
                 if (typeof $ !== 'undefined' && $.fn.select2) {
                     console.log('✅ jQuery e Select2 disponibili, inizializzo...');
@@ -640,23 +809,19 @@
                 
                 if (currentCdl) {
                     disciplineSection.style.display = 'block';
-                    showLoading();
                     
-                    try {
-                        await loadSsdOptions(currentCdl);
-                        
-                        if (ssdOptions.length === 0) {
-                            showNoSsdMessage();
-                        } else {
-                            hideNoSsdMessage();
-                            populateAllSsdSelects();
-                        }
-                        
-                        // Scroll lento verso la sezione discipline
-                        disciplineSection.scrollIntoView({ behavior: 'smooth' });
-                    } finally {
-                        hideLoading();
+                    // Carica SSD (ora sincrono grazie al pre-caricamento)
+                    loadSsdOptions(currentCdl);
+                    
+                    if (ssdOptions.length === 0) {
+                        showNoSsdMessage();
+                    } else {
+                        hideNoSsdMessage();
+                        populateAllSsdSelects();
                     }
+                    
+                    // Scroll lento verso la sezione discipline
+                    disciplineSection.scrollIntoView({ behavior: 'smooth' });
                 } else {
                     disciplineSection.style.display = 'none';
                 }
@@ -664,17 +829,11 @@
                 clearError('cdl-error');
             }
             
-            // Carica opzioni SSD per CDL
-            async function loadSsdOptions(cdl) {
-                try {
-                    const response = await fetch(`/api/ssd/${cdl}`);
-                    const ssdData = await response.json();
-                    ssdOptions = ssdData || [];
-                    console.log(`SSD caricati per ${cdl}:`, ssdOptions.length);
-                } catch (error) {
-                    console.error('Errore nel caricamento SSD:', error);
-                    ssdOptions = [];
-                }
+            // Carica opzioni SSD per CDL usando i dati pre-caricati dal controller
+            function loadSsdOptions(cdl) {
+                ssdOptions = allSsdData[cdl] || [];
+                console.log(`SSD caricati per ${cdl}:`, ssdOptions.length);
+                console.log('📚 Dati SSD disponibili:', allSsdData);
             }
             
             // Popola tutte le select SSD
@@ -807,9 +966,7 @@
                         <input type="number" name="cfu_${disciplineCount}" min="1" max="30" placeholder="CFU">
                         <div class="error-message" id="cfu_${disciplineCount}_error"></div>
                     </div>
-                    <div class="form-group">
-                        <button type="button" class="btn-remove-discipline" onclick="removeDisciplineRow(${disciplineCount})">🗑️</button>
-                    </div>
+                    <button type="button" class="btn-remove-discipline" onclick="removeDisciplineRow(${disciplineCount})">🗑️</button>
                 `;
                 
                 container.appendChild(row);
@@ -823,19 +980,42 @@
                 // Event listeners per validazione
                 const inputs = row.querySelectorAll('input');
                 inputs.forEach(input => {
-                    input.addEventListener('focus', () => clearFieldError(input));
-                    input.addEventListener('change', () => clearFieldError(input));
+                    input.addEventListener('focus', () => {
+                        console.log('🎯 Focus su input disciplina:', input.name);
+                        clearFieldError(input);
+                    });
+                    input.addEventListener('change', () => {
+                        console.log('🔄 Change su input disciplina:', input.name);
+                        clearFieldError(input);
+                    });
+                    input.addEventListener('input', () => {
+                        console.log('⌨️ Input su input disciplina:', input.name);
+                        clearFieldError(input);
+                    });
+                    input.addEventListener('click', () => {
+                        console.log('👆 Click su input disciplina:', input.name);
+                        clearFieldError(input);
+                    });
                 });
                 
                 // Event listener per select SSD (usando Select2 se disponibile)
                 const ssdSelect = row.querySelector('.ssd-select');
                 if (ssdSelect) {
-                    ssdSelect.addEventListener('focus', () => clearFieldError(ssdSelect));
+                    ssdSelect.addEventListener('focus', () => {
+                        console.log('🎯 Focus su select SSD');
+                        clearFieldError(ssdSelect);
+                    });
                     // Usa Select2 change event se disponibile, altrimenti fallback su change standard
                     if (typeof $ !== 'undefined' && $.fn.select2) {
-                        $(ssdSelect).on('change', () => clearFieldError(ssdSelect));
+                        $(ssdSelect).on('change', () => {
+                            console.log('🔄 Change su select SSD (Select2)');
+                            clearFieldError(ssdSelect);
+                        });
                     } else {
-                        ssdSelect.addEventListener('change', () => clearFieldError(ssdSelect));
+                        ssdSelect.addEventListener('change', () => {
+                            console.log('🔄 Change su select SSD (standard)');
+                            clearFieldError(ssdSelect);
+                        });
                     }
                 }
             }
@@ -848,7 +1028,7 @@
                     disciplineCount--; // Decrementa il contatore
                 } else if (row && disciplineCount === 1) {
                     // Mostra errore se si prova a eliminare l'ultima riga
-                    alert('⚠️ Deve essere presente almeno una disciplina per procedere con la simulazione.');
+                    showDisciplineWarningModal();
                 }
             }
             
@@ -897,35 +1077,49 @@
             function validateForm() {
                 let isValid = true;
                 
+                // Pulisci solo gli errori del simulatore
+                document.querySelectorAll('#cdl-error, [id$="_error"]').forEach(error => {
+                    if (error.id.includes('ssd_') || error.id.includes('nome_') || error.id.includes('cfu_') || error.id === 'cdl-error') {
+                        error.style.display = 'none';
+                        error.textContent = '';
+                    }
+                });
+                
                 // Valida CDL
                 const cdlSelect = document.getElementById('simulator-cdl');
                 if (!cdlSelect.value) {
-                    showError('cdl-error', 'Seleziona un corso di laurea valido per procedere con la simulazione.');
+                    showFieldError(cdlSelect, 'Seleziona un corso di laurea valido per procedere con la simulazione.');
                     isValid = false;
                 }
                 
                 // Valida discipline
                 const rows = document.querySelectorAll('.discipline-row');
-                rows.forEach((row, index) => {
-                    const ssdSelect = row.querySelector('.ssd-select');
-                    const nomeInput = row.querySelector('input[name^="nome_"]');
-                    const cfuInput = row.querySelector('input[name^="cfu_"]');
-                    
-                    if (!ssdSelect.value) {
-                        showError(`ssd_${index + 1}_error`, 'Seleziona il settore scientifico disciplinare della materia che hai sostenuto.');
-                        isValid = false;
-                    }
-                    
-                    if (!nomeInput.value.trim()) {
-                        showError(`nome_${index + 1}_error`, 'Inserisci il nome completo della disciplina che hai sostenuto.');
-                        isValid = false;
-                    }
-                    
-                    if (!cfuInput.value || cfuInput.value < 1 || cfuInput.value > 30) {
-                        showError(`cfu_${index + 1}_error`, 'Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30).');
-                        isValid = false;
-                    }
-                });
+                if (rows.length === 0) {
+                    const addButton = document.getElementById('add-discipline');
+                    showFieldError(addButton, 'Aggiungi almeno una disciplina esterna.');
+                    isValid = false;
+                } else {
+                    rows.forEach((row, index) => {
+                        const ssdSelect = row.querySelector('.ssd-select');
+                        const nomeInput = row.querySelector('input[name^="nome_"]');
+                        const cfuInput = row.querySelector('input[name^="cfu_"]');
+                        
+                        if (!ssdSelect.value) {
+                            showFieldError(ssdSelect, 'Seleziona il settore scientifico disciplinare della materia che hai sostenuto.');
+                            isValid = false;
+                        }
+                        
+                        if (!nomeInput.value.trim()) {
+                            showFieldError(nomeInput, 'Inserisci il nome completo della disciplina che hai sostenuto.');
+                            isValid = false;
+                        }
+                        
+                        if (!cfuInput.value || cfuInput.value < 1 || cfuInput.value > 30) {
+                            showFieldError(cfuInput, 'Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30).');
+                            isValid = false;
+                        }
+                    });
+                }
                 
                 // Scroll al primo errore
                 if (!isValid) {
@@ -960,20 +1154,30 @@
                 return data;
             }
             
-            // Ordina risultati per status (riconosciuti e parziali prima)
-            function sortResultsByStatus(data) {
+            // Ordina risultati per priorità (per tabella Dettaglio) o status (per altre tabelle)
+            function sortResultsByStatus(data, tableType = 'summary') {
                 if (!data || !Array.isArray(data)) return data;
                 
                 return data.sort((a, b) => {
-                    const statusA = getLastValue(a).toLowerCase();
-                    const statusB = getLastValue(b).toLowerCase();
-                    
-                    // Priorità: TOT > PARZIALE > NON
-                    const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
-                    const priorityA = priority[statusA] || 4;
-                    const priorityB = priority[statusB] || 4;
-                    
-                    return priorityA - priorityB;
+                    if (tableType === 'detail') {
+                        // Per la tabella Dettaglio, ordina per priorità numerica
+                        const prioritaA = parseInt(a.priorita) || 999;
+                        const prioritaB = parseInt(b.priorita) || 999;
+                        
+                        // Ordina per priorità crescente (1, 2, 3, ...)
+                        return prioritaA - prioritaB;
+                    } else {
+                        // Per le altre tabelle, mantieni l'ordinamento per status
+                        const statusA = getLastValue(a).toLowerCase();
+                        const statusB = getLastValue(b).toLowerCase();
+                        
+                        // Priorità: TOT > PARZIALE > NON
+                        const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
+                        const priorityA = priority[statusA] || 4;
+                        const priorityB = priority[statusB] || 4;
+                        
+                        return priorityA - priorityB;
+                    }
                 });
             }
             
@@ -982,19 +1186,155 @@
                 const values = Object.values(obj);
                 return values[values.length - 1] || '';
             }
+
+            // Funzione per ordinare i dati per colonna
+            function sortDataByColumn(data, column, direction = 'asc') {
+                if (!data || !Array.isArray(data)) return data;
+
+                return data.sort((a, b) => {
+                    let valueA = a[column];
+                    let valueB = b[column];
+
+                    // Gestione speciale per diversi tipi di dati
+                    if (column === 'priorita' || column === 'cfu_richiesti' || column === 'cfu_assegnati' || 
+                        column === 'cfu_riconosciuti' || column === 'integrativi_richiesti' || column === 'cfu_residui') {
+                        // Per numeri
+                        valueA = parseInt(valueA) || 0;
+                        valueB = parseInt(valueB) || 0;
+                    } else if (column === 'stato') {
+                        // Per stato: TOT > PARZIALE > NON
+                        const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
+                        valueA = priority[valueA?.toLowerCase()] || 4;
+                        valueB = priority[valueB?.toLowerCase()] || 4;
+                    } else {
+                        // Per stringhe
+                        valueA = (valueA || '').toString().toLowerCase();
+                        valueB = (valueB || '').toString().toLowerCase();
+                    }
+
+                    if (direction === 'asc') {
+                        return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+                    } else {
+                        return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+                    }
+                });
+            }
+
+            // Funzione per gestire il click sulle intestazioni
+            function handleHeaderClick(tableId, column) {
+                const table = document.getElementById(tableId);
+                const header = table.querySelector(`th[data-sort="${column}"]`);
+                
+                // Determina la direzione dell'ordinamento PRIMA di rimuovere le classi
+                let direction = 'asc';
+                if (header.classList.contains('sort-asc')) {
+                    direction = 'desc';
+                } else if (header.classList.contains('sort-desc')) {
+                    direction = 'asc';
+                }
+                
+                // Rimuovi classi di ordinamento da tutte le intestazioni di questa tabella
+                table.querySelectorAll('th.sortable-header').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                });
+
+                // Aggiungi la classe appropriata all'header corrente
+                if (direction === 'asc') {
+                    header.classList.add('sort-asc');
+                } else {
+                    header.classList.add('sort-desc');
+                }
+
+                // Ordina i dati
+                const currentData = window.currentResults[tableId.replace('-table', '')] || [];
+                const sortedData = sortDataByColumn([...currentData], column, direction);
+                
+                // Aggiorna i risultati
+                window.currentResults[tableId.replace('-table', '')] = sortedData;
+                
+                // Ridisegna la tabella
+                displayTable(tableId, sortedData, tableId.replace('-table', '-pagination'));
+            }
             
+            // Funzione per configurare header ordinabili solo se necessario
+            function setupSortableHeaders() {
+                // Questa funzione verrà chiamata dopo che i risultati sono stati caricati
+                // per determinare se attivare l'ordinamento
+            }
+
+            // Funzione per attivare/disattivare ordinamento basato sul numero di elementi
+            function updateSortableHeaders() {
+                const tables = ['detail-table', 'summary-table', 'leftover-table'];
+                
+                tables.forEach(tableId => {
+                    const table = document.getElementById(tableId);
+                    if (!table) return;
+                    
+                    const dataKey = tableId.replace('-table', '');
+                    const dataCount = window.currentResults ? (window.currentResults[dataKey] || []).length : 0;
+                    
+                    // Se ci sono più di 5 elementi, attiva l'ordinamento
+                    if (dataCount > 5) {
+                        table.querySelectorAll('th').forEach(th => {
+                            th.classList.add('sortable-header');
+                            if (!th.getAttribute('data-sort')) {
+                                // Aggiungi data-sort se non presente
+                                const text = th.textContent.trim();
+                                const sortMap = {
+                                    'Disciplina UniMarconi': 'disciplina_unimarconi',
+                                    'CFU Richiesti': 'cfu_richiesti',
+                                    'Disciplina Esterna': 'disciplina_esterna',
+                                    'CFU Assegnati': 'cfu_assegnati',
+                                    'Priorità': 'priorita',
+                                    'Stato': 'stato',
+                                    'Note': 'note',
+                                    'CFU Riconosciuti': 'cfu_riconosciuti',
+                                    'Integrativi Richiesti': 'integrativi_richiesti',
+                                    'CFU Residui': 'cfu_residui',
+                                    'Motivazione': 'motivazione'
+                                };
+                                th.setAttribute('data-sort', sortMap[text] || '');
+                            }
+                        });
+                        
+                        // Aggiungi event listeners se non già presenti
+                        table.querySelectorAll('th.sortable-header').forEach(header => {
+                            if (!header.hasAttribute('data-sort-listener')) {
+                                header.setAttribute('data-sort-listener', 'true');
+                                header.addEventListener('click', function() {
+                                    const column = this.getAttribute('data-sort');
+                                    handleHeaderClick(tableId, column);
+                                });
+                            }
+                        });
+                    } else {
+                        // Se 5 o meno elementi, disattiva l'ordinamento
+                        table.querySelectorAll('th').forEach(th => {
+                            th.classList.remove('sortable-header', 'sort-asc', 'sort-desc');
+                            th.removeAttribute('data-sort-listener');
+                        });
+                    }
+                });
+            }
+
             // Mostra risultati
             function displayResults(results) {
                 console.log('📊 Displaying results:', results);
                 const container = document.getElementById('results-container');
                 container.style.display = 'block';
                 
-                // Ordina i risultati: riconosciuti e parziali prima
+                // Salva i risultati per l'ordinamento
+                window.currentResults = results;
+                
+                // Aggiorna configurazione header ordinabili
+                updateSortableHeaders();
+                
+                // Ordina i risultati: Dettaglio per priorità, altre per status
                 if (results.detail) {
-                    results.detail = sortResultsByStatus(results.detail);
+                    results.detail = sortResultsByStatus(results.detail, 'detail');
                 }
                 if (results.summary) {
-                    results.summary = sortResultsByStatus(results.summary);
+                    results.summary = sortResultsByStatus(results.summary, 'summary');
                 }
                 
                 displayTable('detail-table', results.detail, 'detail-pagination');
@@ -1035,20 +1375,65 @@
                     
                     pageData.forEach(item => {
                         const row = tbody.insertRow();
-                        Object.values(item).forEach((value, index) => {
-                            const cell = row.insertCell();
+                        
+                        // Mapping corretto per ogni tabella
+                        if (tableId === 'detail-table') {
+                            // Tabella Dettaglio: Disciplina Unimarconi, CFU Richiesti, Disciplina Esterna, CFU Assegnati, Priorità, Stato, Note
+                            row.insertCell().textContent = item.disciplina_unimarconi || '';
+                            row.insertCell().textContent = item.cfu_richiesti || '';
+                            row.insertCell().textContent = item.disciplina_esterna || '';
+                            row.insertCell().textContent = item.cfu_assegnati || '';
                             
-                            // Applica stili per stato (ultima colonna)
-                            if (index === Object.keys(item).length - 1 && value && ['tot', 'parziale', 'non'].includes(value.toLowerCase())) {
-                                console.log(`Applicando stile per stato: ${value}`);
-                                const span = document.createElement('span');
-                                span.textContent = value.toUpperCase();
-                                span.className = `stato-${value.toLowerCase()}`;
-                                cell.appendChild(span);
+                            // Colonna Priorità con nota per priorità 999
+                            const prioritaCell = row.insertCell();
+                            const priorita = parseInt(item.priorita) || 0;
+                            if (priorita === 999) {
+                                prioritaCell.innerHTML = `${priorita} <span style="color: #E57552; font-size: 12px;" title="Priorità 999: Disciplina non riconosciuta o non disponibile">⚠️</span>`;
                             } else {
-                                cell.textContent = value || '';
+                                prioritaCell.textContent = priorita;
                             }
-                        });
+                            
+                            // Colonna Stato
+                            const statoCell = row.insertCell();
+                            if (item.stato && ['tot', 'parziale', 'non'].includes(item.stato.toLowerCase())) {
+                                const span = document.createElement('span');
+                                span.textContent = item.stato.toUpperCase();
+                                span.className = `stato-${item.stato.toLowerCase()}`;
+                                statoCell.appendChild(span);
+                            } else {
+                                statoCell.textContent = item.stato || '';
+                            }
+                            
+                            // Colonna Note con spiegazione per priorità 999
+                            const noteCell = row.insertCell();
+                            let noteText = item.note || '';
+                            if (priorita === 999 && !noteText) {
+                                noteText = 'Disciplina non riconosciuta o non disponibile per questo corso di laurea';
+                            }
+                            noteCell.textContent = noteText;
+                        } else if (tableId === 'summary-table') {
+                            // Tabella Riepilogo: Disciplina Unimarconi, CFU Richiesti, CFU Riconosciuti, Integrativi Richiesti, Stato
+                            row.insertCell().textContent = item.disciplina_unimarconi || '';
+                            row.insertCell().textContent = item.cfu_richiesti || '';
+                            row.insertCell().textContent = item.cfu_riconosciuti || '';
+                            row.insertCell().textContent = item.integrativi_richiesti || '';
+                            
+                            // Ultima colonna: Stato
+                            const statusCell = row.insertCell();
+                            if (item.stato && ['tot', 'parziale', 'non'].includes(item.stato.toLowerCase())) {
+                                const span = document.createElement('span');
+                                span.textContent = item.stato.toUpperCase();
+                                span.className = `stato-${item.stato.toLowerCase()}`;
+                                statusCell.appendChild(span);
+                            } else {
+                                statusCell.textContent = item.stato || '';
+                            }
+                        } else if (tableId === 'leftover-table') {
+                            // Tabella Rimanenze: Disciplina Esterna, CFU Residui, Motivazione
+                            row.insertCell().textContent = item.disciplina_esterna || '';
+                            row.insertCell().textContent = item.cfu_residui || '';
+                            row.insertCell().textContent = item.motivazione || '';
+                        }
                     });
                     
                     // Paginazione migliorata (massimo 5 pulsanti)
@@ -1130,12 +1515,64 @@
                 }
             }
             
+            function clearAllErrors() {
+                console.log('🧹 Pulizia di tutti gli errori...');
+                
+                // Pulisci tutti i messaggi di errore
+                document.querySelectorAll('.error-message').forEach(error => {
+                    error.style.display = 'none';
+                    error.textContent = '';
+                });
+                
+                // Rimuovi le classi di errore dai campi
+                document.querySelectorAll('.field-error').forEach(field => {
+                    field.classList.remove('field-error');
+                });
+                
+                console.log('✅ Tutti gli errori puliti');
+            }
+            
             function clearFieldError(field) {
+                console.log('🧹 Pulizia errore per campo:', field.id || field.name);
+                
+                // Rimuovi classe di errore dal campo
+                field.classList.remove('field-error');
+                
+                // Cerca e rimuovi messaggio di errore nel parentNode
                 const errorElement = field.parentNode.querySelector('.error-message');
                 if (errorElement) {
-                    clearError(errorElement.id);
+                    errorElement.style.display = 'none';
+                    errorElement.textContent = '';
+                    console.log('✅ Rimosso errore dal parentNode');
                 }
-                field.classList.remove('field-error');
+                
+                // Cerca anche nel container per i campi del form studente
+                const container = field.closest('.form-group') || field.closest('.field-container');
+                if (container) {
+                    const containerError = container.querySelector('.error-message');
+                    if (containerError) {
+                        containerError.style.display = 'none';
+                        containerError.textContent = '';
+                        console.log('✅ Rimosso errore dal container');
+                    }
+                }
+                
+                // Cerca anche per ID specifico del campo
+                const specificError = document.getElementById(field.id + '-error');
+                if (specificError) {
+                    specificError.style.display = 'none';
+                    specificError.textContent = '';
+                    console.log('✅ Rimosso errore specifico per ID');
+                }
+                
+                // Cerca tutti gli elementi con classe error-message nel parentNode
+                const allErrors = field.parentNode.querySelectorAll('.error-message');
+                allErrors.forEach(error => {
+                    error.style.display = 'none';
+                    error.textContent = '';
+                });
+                
+                console.log('🧹 Pulizia completata per campo:', field.id || field.name);
             }
             
             function showLoading() {
@@ -1145,6 +1582,16 @@
             function hideLoading() {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
+            
+            // Funzioni per il modale avviso disciplina
+            function showDisciplineWarningModal() {
+                document.getElementById('discipline-warning-modal').style.display = 'flex';
+            }
+            
+            function closeDisciplineWarningModal() {
+                document.getElementById('discipline-warning-modal').style.display = 'none';
+            }
+            
             
             // Salva studente e simulazione
             async function saveStudentAndSimulation() {
@@ -1259,13 +1706,16 @@
                 } catch (error) {
                     console.error('❌ Errore nel salvataggio:', error);
                     hideLoading();
-                    alert('❌ Errore nel salvataggio: ' + error.message);
+                    alert('Errore nel salvataggio: ' + error.message);
                 }
             }
             
             // Valida form studente
             function validateStudentForm() {
                 let isValid = true;
+                
+                // Pulisci tutti gli errori precedenti
+                clearAllErrors();
                 
                 // Valida nome
                 const firstName = document.getElementById('firstName');
@@ -1279,6 +1729,41 @@
                 if (!lastName.value.trim()) {
                     showFieldError(lastName, 'Il cognome è obbligatorio');
                     isValid = false;
+                }
+                
+                // Valida CDL
+                const cdlSelect = document.getElementById('simulator-cdl');
+                if (!cdlSelect.value) {
+                    showFieldError(cdlSelect, 'Seleziona un corso di laurea valido per procedere con la simulazione.');
+                    isValid = false;
+                }
+                
+                // Valida discipline
+                const rows = document.querySelectorAll('.discipline-row');
+                if (rows.length === 0) {
+                    showFieldError(document.getElementById('add-discipline'), 'Aggiungi almeno una disciplina esterna.');
+                    isValid = false;
+                } else {
+                    rows.forEach((row, index) => {
+                        const ssdSelect = row.querySelector('.ssd-select');
+                        const nomeInput = row.querySelector('input[name^="nome_"]');
+                        const cfuInput = row.querySelector('input[name^="cfu_"]');
+                        
+                        if (!ssdSelect.value) {
+                            showFieldError(ssdSelect, 'Seleziona il settore scientifico disciplinare della materia che hai sostenuto.');
+                            isValid = false;
+                        }
+                        
+                        if (!nomeInput.value.trim()) {
+                            showFieldError(nomeInput, 'Inserisci il nome completo della disciplina che hai sostenuto.');
+                            isValid = false;
+                        }
+                        
+                        if (!cfuInput.value || cfuInput.value < 1 || cfuInput.value > 30) {
+                            showFieldError(cfuInput, 'Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30).');
+                            isValid = false;
+                        }
+                    });
                 }
                 
                 // Valida email
@@ -1343,15 +1828,35 @@
             function showFieldError(field, message) {
                 field.classList.add('field-error');
                 
-                // Crea o aggiorna messaggio di errore
-                let errorElement = field.parentNode.querySelector('.field-error-message');
+                // Cerca messaggio di errore esistente
+                let errorElement = field.parentNode.querySelector('.error-message');
                 if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'field-error-message';
-                    errorElement.style.cssText = 'color: #dc3545; font-size: 14px; margin-top: 5px;';
-                    field.parentNode.appendChild(errorElement);
+                    // Cerca nel container per i campi del form studente
+                    const container = field.closest('.form-group') || field.closest('.field-container');
+                    if (container) {
+                        errorElement = container.querySelector('.error-message');
+                    }
                 }
+                
+                if (!errorElement) {
+                    // Crea nuovo elemento di errore
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'error-message';
+                    errorElement.style.cssText = 'color: #dc3545; font-size: 14px; margin-top: 5px; display: block;';
+                    errorElement.id = field.id + '-error';
+                    
+                    // Per le select, inserisci dopo la select stessa
+                    if (field.tagName === 'SELECT' || field.classList.contains('ssd-select')) {
+                        // Inserisci dopo la select
+                        field.parentNode.insertBefore(errorElement, field.nextSibling);
+                    } else {
+                        // Per gli input, inserisci dopo il campo
+                        field.parentNode.insertBefore(errorElement, field.nextSibling);
+                    }
+                }
+                
                 errorElement.textContent = message;
+                errorElement.style.display = 'block';
             }
         </script>
 {% endblock %}

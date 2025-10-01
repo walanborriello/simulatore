@@ -403,7 +403,7 @@
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" onclick="closeDeleteModal()">Annulla</button>
-                    <button class="btn btn-danger" onclick="confirmDeleteStudent()">Elimina</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteStudent(studentToDelete)">Elimina</button>
                 </div>
             </div>
         </div>
@@ -471,14 +471,14 @@
                 studentToDelete = null;
             }
             
-            function confirmDeleteStudent() {
-                if (!studentToDelete) {
+            function confirmDeleteStudent(studentId) {
+                if (!studentId) {
                     return;
                 }
                 
                 // Chiudi il modale e reindirizza alla pagina di eliminazione
                 closeDeleteModal();
-                window.location.href = `/student/${studentToDelete}/delete`;
+                window.location.href = `/student/${studentId}/delete`;
             }
             
             // Chiudi modale cliccando fuori

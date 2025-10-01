@@ -82,13 +82,32 @@ class CfuSimulatorService
     {
         // Carica TUTTI i dati in memoria per performance (caricamento preventivo)
         
-        // Carica TUTTE le offerte (non solo per CDL specifico)
-        $offertaRepo = $this->em->getRepository(ZcfuOfferta::class);
-        $offertaEntities = $offertaRepo->createQueryBuilder('o')
-            ->where('o.cdl = :cdl')
+        // Prima ottieni l'orientamento per questo CDL
+        $cdlRepo = $this->em->getRepository(\App\Entity\ZcfuCdl::class);
+        $cdlEntities = $cdlRepo->createQueryBuilder('c')
+            ->where('c.cdl = :cdl')
             ->setParameter('cdl', $cdl)
             ->getQuery()
             ->getResult();
+        
+        $cdlEntity = !empty($cdlEntities) ? $cdlEntities[0] : null;
+        $oriId = $cdlEntity ? $cdlEntity->getIdOri() : null;
+        
+        // Carica TUTTE le offerte per questo CDL (sia ORI_ID=0 che ORI_ID specifico)
+        // ORI_ID=0 = orientamento generale, ORI_ID specifico = orientamento del CDL
+        $offertaRepo = $this->em->getRepository(ZcfuOfferta::class);
+        $qb = $offertaRepo->createQueryBuilder('o')
+            ->where('o.cdl = :cdl')
+            ->setParameter('cdl', $cdl);
+        
+        if ($oriId !== null) {
+            $qb->andWhere('(o.oriId = 0 OR o.oriId = :oriId)')
+               ->setParameter('oriId', $oriId);
+        } else {
+            $qb->andWhere('o.oriId = 0');
+        }
+        
+        $offertaEntities = $qb->getQuery()->getResult();
 
         $this->offerta = [];
         foreach ($offertaEntities as $off) {
@@ -180,7 +199,8 @@ class CfuSimulatorService
                     'disciplina_esterna' => $recognized['nome'] ?? '',
                     'cfu_assegnati' => $recognized['cfu'],
                     'priorita' => $recognized['priorita'] ?? 0,
-                    'note' => $recognized['note'] ?? ''
+                    'note' => $recognized['note'] ?? '',
+                    'stato' => $remaining == 0 ? 'tot' : ($recognized['cfu'] > 0 ? 'parziale' : 'non')
                 ];
 
                 // Aggiungi a riepilogo
@@ -268,38 +288,135 @@ class CfuSimulatorService
     {
         $totalRequired = 0;
         $totalAssigned = 0;
+        $groupResults = [];
 
         foreach ($group as $off) {
             $totalRequired += $off['CFU'];
         }
 
-        // Distribuisci CFU disponibili tra le discipline del gruppo
-        foreach ($group as $off) {
+        // Prima passata: prova a distribuire CFU disponibili con logica ottimizzata
+        $groupResults = $this->optimizeRosaGroupDistribution($group, $available);
+        
+        // Calcola totale assegnato
+        foreach ($groupResults as $result) {
+            $totalAssigned += $result['recognized']['cfu'];
+        }
+
+        // ROLLBACK: Se il gruppo non soddisfa i requisiti minimi, annulla tutto
+        // Per gruppi rosa, richiediamo almeno il 70% dei CFU totali per considerarlo valido
+        $minRequired = $totalRequired * 0.7; // Almeno 70% dei CFU richiesti per gruppi a scelta
+        if ($totalAssigned < $minRequired) {
+            // Rollback: ripristina i CFU utilizzati
+            foreach ($groupResults as $result) {
+                $this->rollbackRecognition($result['recognized'], $available);
+            }
+            
+            // Aggiungi tutte le discipline del gruppo come non riconosciute
+            foreach ($group as $off) {
+                $disciplineName = $this->discipline[$off['DIS_ID']]['disciplina'] ?? 'Disciplina sconosciuta';
+                
+                $detail[] = [
+                    'disciplina_unimarconi' => $disciplineName,
+                    'cfu_richiesti' => $off['CFU'],
+                    'disciplina_esterna' => '',
+                    'cfu_assegnati' => 0,
+                    'priorita' => 0,
+                    'note' => 'Gruppo non soddisfa requisiti minimi (rollback)',
+                    'stato' => 'non'
+                ];
+
+                $summary[] = [
+                    'disciplina_unimarconi' => $disciplineName,
+                    'cfu_richiesti' => $off['CFU'],
+                    'cfu_riconosciuti' => 0,
+                    'integrativi_richiesti' => $off['CFU'],
+                    'stato' => 'non'
+                ];
+            }
+        } else {
+            // Gruppo soddisfa i requisiti, mantieni i risultati
+            foreach ($groupResults as $result) {
+                $off = $result['off'];
+                $disciplineName = $result['disciplineName'];
+                $recognized = $result['recognized'];
+
+                $detail[] = [
+                    'disciplina_unimarconi' => $disciplineName,
+                    'cfu_richiesti' => $off['CFU'],
+                    'disciplina_esterna' => $recognized['nome'] ?? '',
+                    'cfu_assegnati' => $recognized['cfu'],
+                    'priorita' => $recognized['priorita'] ?? 0,
+                    'note' => $recognized['note'] ?? '',
+                    'stato' => $recognized['cfu'] == $off['CFU'] ? 'tot' : ($recognized['cfu'] > 0 ? 'parziale' : 'non')
+                ];
+
+                $summary[] = [
+                    'disciplina_unimarconi' => $disciplineName,
+                    'cfu_richiesti' => $off['CFU'],
+                    'cfu_riconosciuti' => $recognized['cfu'],
+                    'integrativi_richiesti' => max(0, $off['CFU'] - $recognized['cfu']),
+                    'stato' => $recognized['cfu'] == $off['CFU'] ? 'tot' : ($recognized['cfu'] > 0 ? 'parziale' : 'non')
+                ];
+            }
+        }
+    }
+
+    private function optimizeRosaGroupDistribution(array $group, array &$available): array
+    {
+        $groupResults = [];
+        
+        // Crea una copia del gruppo per non modificare l'originale
+        $sortedGroup = $group;
+        
+        // Ordina le discipline del gruppo per priorità (CFU richiesti, poi priorità regole)
+        usort($sortedGroup, function($a, $b) {
+            // Prima per CFU richiesti (discendente)
+            if ($a['CFU'] != $b['CFU']) {
+                return $b['CFU'] - $a['CFU'];
+            }
+            // Poi per priorità regole (ascendente - priorità 0 prima di 1)
+            $prioA = $this->getMinPriorityForOffer($a['OFF_ID']);
+            $prioB = $this->getMinPriorityForOffer($b['OFF_ID']);
+            return $prioA - $prioB;
+        });
+        
+        // Distribuisci CFU seguendo l'ordine ottimizzato
+        foreach ($sortedGroup as $off) {
             $offId = $off['OFF_ID'];
-            $requiredCfu = $off['CFU'];
             $disciplineName = $this->discipline[$off['DIS_ID']]['disciplina'] ?? 'Disciplina sconosciuta';
-
+            
             $recognized = $this->findRecognition($offId, $available);
-            $totalAssigned += $recognized['cfu'];
-
-            // Aggiungi a dettaglio
-            $detail[] = [
-                'disciplina_unimarconi' => $disciplineName,
-                'cfu_richiesti' => $requiredCfu,
-                'disciplina_esterna' => $recognized['nome'] ?? '',
-                'cfu_assegnati' => $recognized['cfu'],
-                'priorita' => $recognized['priorita'] ?? 0,
-                'note' => $recognized['note'] ?? ''
+            
+            $groupResults[] = [
+                'off' => $off,
+                'disciplineName' => $disciplineName,
+                'recognized' => $recognized
             ];
+        }
+        
+        return $groupResults;
+    }
+    
+    private function getMinPriorityForOffer(int $offId): int
+    {
+        if (!isset($this->regole[$offId])) {
+            return 999; // Priorità bassa se non ci sono regole
+        }
+        
+        $priorities = array_values($this->regole[$offId]);
+        return min($priorities);
+    }
 
-            // Aggiungi a riepilogo
-            $summary[] = [
-                'disciplina_unimarconi' => $disciplineName,
-                'cfu_richiesti' => $requiredCfu,
-                'cfu_riconosciuti' => $recognized['cfu'],
-                'integrativi_richiesti' => max(0, $requiredCfu - $recognized['cfu']),
-                'stato' => $recognized['cfu'] == $requiredCfu ? 'tot' : ($recognized['cfu'] > 0 ? 'parziale' : 'non')
-            ];
+    private function rollbackRecognition(array $recognized, array &$available): void
+    {
+        if ($recognized['cfu'] > 0 && !empty($recognized['nome'])) {
+            // Trova e ripristina i CFU utilizzati
+            foreach ($available as &$avail) {
+                if ($avail['nome'] === $recognized['nome']) {
+                    $avail['used'] = max(0, $avail['used'] - $recognized['cfu']);
+                    break;
+                }
+            }
         }
     }
 }

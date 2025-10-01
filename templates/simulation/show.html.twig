@@ -53,6 +53,25 @@
                 <div class="results-container" id="results-container">
                     <h3 style="color: #E57552; margin-bottom: 20px;">Risultati Simulazione</h3>
                     
+                    <!-- Legenda Stati -->
+                    <div class="stato-legend" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #E57552;">
+                        <h5 style="margin: 0 0 10px 0; color: #E57552;">📋 Legenda Stati:</h5>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stato-tot">TOT</span>
+                                <span style="font-size: 14px;">= Totale (riconoscimento completo)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stato-parziale">PARZIALE</span>
+                                <span style="font-size: 14px;">= Parziale (riconoscimento parziale)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="stato-non">NON</span>
+                                <span style="font-size: 14px;">= Non riconosciuto</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Tabella Dettaglio -->
                     <div class="table-section">
                         <h4>Dettaglio Riconoscimenti</h4>
@@ -64,8 +83,8 @@
                                     <th>Disciplina Esterna</th>
                                     <th>CFU Assegnati</th>
                                     <th>Priorità</th>
-                                    <th>Note</th>
                                     <th>Stato</th>
+                                    <th>Note</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -117,7 +136,42 @@
 
 <!-- Loading Overlay -->
 <div id="loading-overlay" style="display: none;">
-    <div class="loading-spinner"></div>
+    <div class="loading-container">
+        <div class="loading-ring"></div>
+        <img src="/logo.png" alt="Loading" class="loading-logo">
+    </div>
+</div>
+
+<!-- Modale Avviso Disciplina -->
+<div class="modal-overlay" id="discipline-warning-modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>⚠️ Avviso</h3>
+            <button class="modal-close" onclick="closeDisciplineWarningModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Deve rimanere almeno una disciplina.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeDisciplineWarningModal()">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale Nessuna Simulazione da Salvare -->
+<div class="modal-overlay" id="no-simulation-modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>⚠️ Nessuna Simulazione</h3>
+            <button class="modal-close" onclick="closeNoSimulationModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Nessuna simulazione da salvare. Esegui prima una simulazione.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeNoSimulationModal()">OK</button>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -218,7 +272,7 @@
     .discipline-row {
         display: flex;
         gap: 15px;
-        align-items: end;
+        align-items: flex-start;
         margin-bottom: 15px;
         padding: 15px;
         background: #f8f9fa;
@@ -248,10 +302,19 @@
         cursor: pointer;
         font-size: 12px;
         height: 40px;
+        align-self: flex-start;
+        margin-top: 35px;
     }
     
     .btn-remove-discipline:hover {
         background: #c82333;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none;
     }
     
     .btn-add-discipline {
@@ -361,6 +424,33 @@
         cursor: not-allowed;
     }
     
+    /* Stili per intestazioni cliccabili */
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+        transition: background-color 0.2s;
+    }
+    
+    
+    .sortable-header::after {
+        content: ' ↕';
+        opacity: 0.5;
+        font-size: 12px;
+    }
+    
+    .sortable-header.sort-asc::after {
+        content: ' ↑';
+        opacity: 1;
+        color: #fff;
+    }
+    
+    .sortable-header.sort-desc::after {
+        content: ' ↓';
+        opacity: 1;
+        color: #fff;
+    }
+    
     /* Stili per stati risultati */
     .stato-tot {
         background-color: #d4edda !important;
@@ -424,16 +514,33 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.95);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 9999;
     }
     
-    .loading-spinner {
-        width: 60px;
-        height: 60px;
+    .loading-container {
+        width: 120px;
+        height: 120px;
+        position: relative;
+        margin: 0 auto;
+    }
+    
+    .loading-logo {
+        width: 50px;
+        height: 25px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    .loading-ring {
+        width: 120px;
+        height: 120px;
         border: 4px solid #f3f3f3;
         border-top: 4px solid #E57552;
         border-radius: 50%;
@@ -445,9 +552,25 @@
         100% { transform: rotate(360deg); }
     }
     
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
+    }
+    
     .actions {
         margin-top: 30px;
         text-align: center;
+    }
+    
+    /* Stili per errori di validazione */
+    .field-error {
+        border-color: #dc3545 !important;
+    }
+    
+    .field-error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
     }
     
     .btn {
@@ -485,6 +608,8 @@
     // Variabili globali
     let currentCdl = '';
     let currentResults = null;
+    // Dati SSD pre-caricati dal controller (evita chiamate AJAX lente)
+    const allSsdData = {{ allSsdData|json_encode|raw }};
     const studentId = {{ student.id }};
     const simulationId = {{ simulation.id }};
     
@@ -502,12 +627,15 @@
         console.log('jQuery disponibile:', typeof $ !== 'undefined');
         console.log('Select2 disponibile:', typeof $ !== 'undefined' && $.fn.select2);
         
+        // Aggiungi event listeners per ordinamento tabelle (solo se necessario)
+        setupSortableHeaders();
+        
         // Il campo CDL è disabilitato, non inizializziamo Select2
         console.log('ℹ️ Campo CDL disabilitato per visualizzazione simulazione');
         
         // Imposta il CDL corrente se c'è una simulazione
         const cdlSelect = document.getElementById('simulator-cdl');
-        if (cdlSelect.value) {
+        if (cdlSelect && cdlSelect.value) {
             currentCdl = cdlSelect.value;
             console.log('🎓 CDL corrente:', currentCdl);
         }
@@ -528,7 +656,7 @@
         });
         document.getElementById('save-simulation-btn').addEventListener('click', saveSimulation);
         
-        // Carica i dati della simulazione
+        // Carica i dati della simulazione (i dati SSD sono già disponibili dal controller)
         loadSimulationData();
     });
     
@@ -590,15 +718,22 @@
         
         // Aggiungi opzioni dalle SSD passate dal controller
         const ssdOptions = {{ ssdOptions|json_encode|raw }};
-        console.log('📚 SSD disponibili:', ssdOptions);
+        console.log('📚 SSD disponibili dal template:', ssdOptions);
         
-        ssdOptions.forEach((ssd, index) => {
-            console.log(`📖 SSD ${index + 1}:`, ssd);
-            const option = document.createElement('option');
-            option.value = ssd.riconoscibile;
-            option.textContent = ssd.riconoscibile;
-            select.appendChild(option);
-        });
+        if (ssdOptions && ssdOptions.length > 0) {
+            ssdOptions.forEach((ssd, index) => {
+                console.log(`📖 SSD ${index + 1}:`, ssd);
+                const option = document.createElement('option');
+                option.value = ssd.riconoscibile;
+                option.textContent = ssd.riconoscibile;
+                select.appendChild(option);
+            });
+            console.log(`✅ Caricate ${ssdOptions.length} opzioni SSD dal template`);
+        } else {
+            console.log('⚠️ Nessuna opzione SSD disponibile dal template, carico dinamicamente...');
+            // Se non ci sono dati SSD dal template, caricali dinamicamente
+            loadSsdForCurrentCdl(select);
+        }
         
         // Reinizializza Select2 solo se jQuery è disponibile
         if (typeof $ !== 'undefined' && $.fn.select2) {
@@ -613,6 +748,56 @@
             if (select.value) {
                 $(select).trigger('change');
             }
+        }
+    }
+    
+    // Carica SSD per il CDL corrente usando i dati pre-caricati dal controller
+    function loadSsdForCurrentCdl(select) {
+        if (!currentCdl) {
+            console.log('⚠️ Nessun CDL selezionato, non posso caricare SSD');
+            return;
+        }
+        
+        console.log(`🔄 Caricamento SSD per CDL: ${currentCdl}`);
+        console.log('📚 Dati SSD disponibili:', allSsdData);
+        
+        // Usa i dati pre-caricati dal controller
+        if (allSsdData && allSsdData[currentCdl]) {
+            console.log('📚 Usando dati SSD pre-caricati dal controller');
+            const ssdData = allSsdData[currentCdl];
+            
+            if (ssdData && ssdData.length > 0) {
+                // Aggiungi le opzioni SSD
+                ssdData.forEach((ssd, index) => {
+                    const option = document.createElement('option');
+                    option.value = ssd.id;
+                    option.textContent = ssd.text;
+                    select.appendChild(option);
+                });
+                
+                // Aggiorna Select2 se è inizializzato
+                if (typeof $ !== 'undefined' && $(select).hasClass('select2-hidden-accessible')) {
+                    $(select).trigger('change');
+                }
+                
+                console.log(`✅ Caricate ${ssdData.length} opzioni SSD dai dati pre-caricati`);
+            } else {
+                console.log('⚠️ Nessuna opzione SSD trovata per questo CDL nei dati pre-caricati');
+                // Aggiungi un'opzione di errore
+                const errorOption = document.createElement('option');
+                errorOption.value = '';
+                errorOption.textContent = '⚠️ Nessuna disciplina disponibile per questo corso';
+                errorOption.disabled = true;
+                select.appendChild(errorOption);
+            }
+        } else {
+            console.log('⚠️ Nessun dato SSD disponibile per il CDL:', currentCdl);
+            // Aggiungi un'opzione di errore
+            const errorOption = document.createElement('option');
+            errorOption.value = '';
+            errorOption.textContent = '⚠️ Nessuna disciplina disponibile per questo corso';
+            errorOption.disabled = true;
+            select.appendChild(errorOption);
         }
     }
     
@@ -631,14 +816,17 @@
                 <select class="ssd-select" name="ssd_${rowIndex}">
                     <option value="">Seleziona SSD</option>
                 </select>
+                <div class="error-message" id="ssd_${rowIndex}_error"></div>
             </div>
             <div class="form-group">
                 <label>Nome Disciplina <span class="required">*</span></label>
                 <input type="text" name="nome_${rowIndex}" placeholder="Nome della disciplina">
+                <div class="error-message" id="nome_${rowIndex}_error"></div>
             </div>
             <div class="form-group">
                 <label>CFU <span class="required">*</span></label>
                 <input type="number" name="cfu_${rowIndex}" min="1" max="30" placeholder="CFU">
+                <div class="error-message" id="cfu_${rowIndex}_error"></div>
             </div>
             <button type="button" class="btn-remove-discipline" onclick="removeDisciplineRow(this)">🗑️</button>
         `;
@@ -648,6 +836,22 @@
         // Aggiorna la select SSD
         const ssdSelect = row.querySelector('.ssd-select');
         updateSsdSelect(ssdSelect);
+        
+        // Aggiungi event listeners per pulire errori
+        const inputs = row.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => clearError(`${input.name}_error`));
+            input.addEventListener('change', () => clearError(`${input.name}_error`));
+        });
+        
+        // Event listener per select SSD (usando Select2 se disponibile)
+        if (ssdSelect) {
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(ssdSelect).on('change', () => clearError(`ssd_${rowIndex}_error`));
+            } else {
+                ssdSelect.addEventListener('change', () => clearError(`ssd_${rowIndex}_error`));
+            }
+        }
         
         console.log(`✅ Aggiunta riga disciplina ${rowIndex}`);
     }
@@ -664,7 +868,7 @@
             console.log('✅ Riga disciplina rimossa');
         } else {
             console.log('⚠️ Tentativo di rimuovere l\'ultima disciplina');
-            alert('Deve rimanere almeno una disciplina');
+            showDisciplineWarningModal();
         }
     }
     
@@ -743,6 +947,17 @@
                 for (let i = 0; i < 3; i++) {
                     addDisciplineRow();
                 }
+                
+                // Assicurati che le select SSD siano popolate
+                setTimeout(() => {
+                    const ssdSelects = document.querySelectorAll('.ssd-select');
+                    ssdSelects.forEach(select => {
+                        if (select.options.length <= 1) { // Solo l'opzione placeholder
+                            console.log('🔄 Popolando select SSD vuota...');
+                            updateSsdSelect(select);
+                        }
+                    });
+                }, 200);
             }
             
             // Mostra i risultati esistenti
@@ -800,7 +1015,14 @@
                 console.log('✅ DisplayResults completato');
             } else {
                 console.log('❌ Errore nella simulazione:', result.error);
-                alert('Errore nella simulazione: ' + (result.error || 'Errore sconosciuto'));
+                
+                // Gestisci errori di validazione lato server
+                if (result.details && typeof result.details === 'object') {
+                    console.log('🔍 Mostrando errori di validazione lato server:', result.details);
+                    showServerValidationErrors(result.details);
+                } else {
+                    alert('Errore nella simulazione: ' + (result.error || 'Errore sconosciuto'));
+                }
             }
         } catch (error) {
             console.error('❌ Errore simulazione:', error);
@@ -813,14 +1035,19 @@
     // Valida il form
     function validateForm() {
         let isValid = true;
+        let firstErrorElement = null;
         
         console.log('🔍 Validando form...');
         
+        // Pulisci errori precedenti
+        clearAllErrors();
+        
         // Valida CDL
         const cdlSelect = document.getElementById('simulator-cdl');
-        if (!cdlSelect.value) {
+        if (!cdlSelect || !cdlSelect.value || cdlSelect.value.trim() === '') {
             console.log('❌ CDL non selezionato');
-            alert('Seleziona un corso di laurea valido per procedere con la simulazione.');
+            showError('cdl-error', 'Seleziona un corso di laurea valido per procedere con la simulazione.');
+            if (!firstErrorElement) firstErrorElement = cdlSelect;
             isValid = false;
         }
         
@@ -828,32 +1055,167 @@
         const rows = document.querySelectorAll('.discipline-row');
         console.log('🔍 Validando', rows.length, 'righe discipline');
         
+        if (rows.length === 0) {
+            console.log('❌ Nessuna disciplina inserita');
+            showError('discipline-error', 'Inserisci almeno una disciplina esterna.');
+            isValid = false;
+        }
+        
         rows.forEach((row, index) => {
             const ssdSelect = row.querySelector('.ssd-select');
             const nomeInput = row.querySelector('input[name^="nome_"]');
             const cfuInput = row.querySelector('input[name^="cfu_"]');
             
-            if (!ssdSelect || !ssdSelect.value) {
+            // Estrai il numero della disciplina dal name del campo
+            const ssdName = ssdSelect ? ssdSelect.name : '';
+            const disciplineNumber = ssdName ? ssdName.split('_')[1] : (index + 1);
+            
+            // Valida SSD
+            if (!ssdSelect || !ssdSelect.value || ssdSelect.value.trim() === '') {
                 console.log(`❌ SSD mancante per riga ${index + 1}`);
-                alert(`Seleziona il settore scientifico disciplinare per la disciplina ${index + 1}.`);
+                showError(`ssd_${disciplineNumber}_error`, 'Seleziona il settore scientifico disciplinare della materia che hai sostenuto.');
+                if (!firstErrorElement) firstErrorElement = ssdSelect;
                 isValid = false;
             }
             
-            if (!nomeInput || !nomeInput.value.trim()) {
+            // Valida Nome
+            if (!nomeInput || !nomeInput.value || nomeInput.value.trim() === '') {
                 console.log(`❌ Nome mancante per riga ${index + 1}`);
-                alert(`Inserisci il nome completo della disciplina ${index + 1}.`);
+                showError(`nome_${disciplineNumber}_error`, 'Inserisci il nome completo della disciplina che hai sostenuto.');
+                if (!firstErrorElement) firstErrorElement = nomeInput;
                 isValid = false;
             }
             
-            if (!cfuInput || !cfuInput.value || cfuInput.value < 1 || cfuInput.value > 30) {
-                console.log(`❌ CFU non validi per riga ${index + 1}`);
-                alert(`Inserisci CFU validi (1-30) per la disciplina ${index + 1}.`);
+            // Valida CFU
+            const cfuValue = cfuInput ? parseInt(cfuInput.value) : 0;
+            if (!cfuInput || !cfuInput.value || cfuValue < 1 || cfuValue > 30 || isNaN(cfuValue)) {
+                console.log(`❌ CFU non validi per riga ${index + 1}:`, cfuInput ? cfuInput.value : 'campo non trovato');
+                showError(`cfu_${disciplineNumber}_error`, 'Inserisci il numero di crediti formativi universitari (CFU) della disciplina (1-30).');
+                if (!firstErrorElement) firstErrorElement = cfuInput;
                 isValid = false;
             }
         });
         
+        // Scroll al primo errore
+        if (!isValid && firstErrorElement) {
+            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
         console.log('🔍 Validazione completata:', isValid ? '✅' : '❌');
         return isValid;
+    }
+    
+    // Mostra errore sotto un campo
+    function showError(errorId, message) {
+        const errorElement = document.getElementById(errorId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // Aggiungi classe error al campo corrispondente
+            const fieldName = errorId.replace('_error', '');
+            let targetField = null;
+            
+            if (fieldName === 'cdl') {
+                targetField = document.getElementById('simulator-cdl');
+            } else if (fieldName.startsWith('ssd_')) {
+                const index = fieldName.split('_')[1];
+                const row = document.querySelectorAll('.discipline-row')[index - 1];
+                if (row) targetField = row.querySelector('.ssd-select');
+            } else if (fieldName.startsWith('nome_')) {
+                const index = fieldName.split('_')[1];
+                const row = document.querySelectorAll('.discipline-row')[index - 1];
+                if (row) targetField = row.querySelector('input[name^="nome_"]');
+            } else if (fieldName.startsWith('cfu_')) {
+                const index = fieldName.split('_')[1];
+                const row = document.querySelectorAll('.discipline-row')[index - 1];
+                if (row) targetField = row.querySelector('input[name^="cfu_"]');
+            }
+            
+            if (targetField) {
+                targetField.classList.add('field-error');
+            }
+        }
+    }
+    
+    // Pulisci tutti gli errori
+    function clearAllErrors() {
+        // Rimuovi classi di errore
+        document.querySelectorAll('.field-error').forEach(field => {
+            field.classList.remove('field-error');
+        });
+        
+        // Nascondi messaggi di errore
+        document.querySelectorAll('.error-message').forEach(error => {
+            error.style.display = 'none';
+            error.textContent = '';
+        });
+    }
+    
+    // Mostra errori di validazione lato server
+    function showServerValidationErrors(errors) {
+        console.log('🔍 Mostrando errori server:', errors);
+        
+        // Pulisci errori precedenti
+        clearAllErrors();
+        
+        let firstErrorElement = null;
+        
+        // Mostra ogni errore
+        Object.keys(errors).forEach(fieldKey => {
+            const errorMessage = errors[fieldKey];
+            console.log(`❌ Errore campo ${fieldKey}:`, errorMessage);
+            
+            let targetField = null;
+            let errorId = '';
+            
+            if (fieldKey === 'cdl') {
+                targetField = document.getElementById('simulator-cdl');
+                errorId = 'cdl-error';
+            } else if (fieldKey.startsWith('discipline_')) {
+                // Gestisci errori delle discipline (es: discipline_0_ssd, discipline_1_cfu, etc.)
+                const parts = fieldKey.split('_');
+                const disciplineIndex = parts[1];
+                const fieldType = parts[2]; // ssd, nome, cfu
+                
+                const rows = document.querySelectorAll('.discipline-row');
+                const row = rows[disciplineIndex];
+                
+                if (row) {
+                    if (fieldType === 'ssd') {
+                        targetField = row.querySelector('.ssd-select');
+                        errorId = `ssd_${parseInt(disciplineIndex) + 1}_error`;
+                    } else if (fieldType === 'nome') {
+                        targetField = row.querySelector('input[name^="nome_"]');
+                        errorId = `nome_${parseInt(disciplineIndex) + 1}_error`;
+                    } else if (fieldType === 'cfu') {
+                        targetField = row.querySelector('input[name^="cfu_"]');
+                        errorId = `cfu_${parseInt(disciplineIndex) + 1}_error`;
+                    }
+                }
+            } else if (fieldKey === 'discipline') {
+                // Errore generale per le discipline
+                const firstRow = document.querySelector('.discipline-row');
+                if (firstRow) {
+                    targetField = firstRow.querySelector('.ssd-select');
+                    errorId = 'ssd_1_error';
+                }
+            }
+            
+            if (targetField) {
+                targetField.classList.add('field-error');
+                showError(errorId, errorMessage);
+                
+                if (!firstErrorElement) {
+                    firstErrorElement = targetField;
+                }
+            }
+        });
+        
+        // Scroll al primo errore
+        if (firstErrorElement) {
+            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
     
     // Ottiene i dati delle discipline
@@ -883,19 +1245,155 @@
         console.log('📚 Totale discipline valide:', data.length);
         return data;
     }
+
+    // Funzione per ordinare i dati per colonna
+    function sortDataByColumn(data, column, direction = 'asc') {
+        if (!data || !Array.isArray(data)) return data;
+
+        return data.sort((a, b) => {
+            let valueA = a[column];
+            let valueB = b[column];
+
+            // Gestione speciale per diversi tipi di dati
+            if (column === 'priorita' || column === 'cfu_richiesti' || column === 'cfu_assegnati' || 
+                column === 'cfu_riconosciuti' || column === 'integrativi_richiesti' || column === 'cfu_residui') {
+                // Per numeri
+                valueA = parseInt(valueA) || 0;
+                valueB = parseInt(valueB) || 0;
+            } else if (column === 'stato') {
+                // Per stato: TOT > PARZIALE > NON
+                const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
+                valueA = priority[valueA?.toLowerCase()] || 4;
+                valueB = priority[valueB?.toLowerCase()] || 4;
+            } else {
+                // Per stringhe
+                valueA = (valueA || '').toString().toLowerCase();
+                valueB = (valueB || '').toString().toLowerCase();
+            }
+
+            if (direction === 'asc') {
+                return valueA < valueB ? -1 : valueA > valueB ? 1 : 0;
+            } else {
+                return valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+            }
+        });
+    }
+
+    // Funzione per gestire il click sulle intestazioni
+    function handleHeaderClick(tableId, column) {
+        const table = document.getElementById(tableId);
+        const header = table.querySelector(`th[data-sort="${column}"]`);
+        
+        // Determina la direzione dell'ordinamento PRIMA di rimuovere le classi
+        let direction = 'asc';
+        if (header.classList.contains('sort-asc')) {
+            direction = 'desc';
+        } else if (header.classList.contains('sort-desc')) {
+            direction = 'asc';
+        }
+        
+        // Rimuovi classi di ordinamento da tutte le intestazioni di questa tabella
+        table.querySelectorAll('th.sortable-header').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+        });
+
+        // Aggiungi la classe appropriata all'header corrente
+        if (direction === 'asc') {
+            header.classList.add('sort-asc');
+        } else {
+            header.classList.add('sort-desc');
+        }
+
+        // Ordina i dati
+        const currentData = window.currentResults[tableId.replace('-table', '')] || [];
+        const sortedData = sortDataByColumn([...currentData], column, direction);
+        
+        // Aggiorna i risultati
+        window.currentResults[tableId.replace('-table', '')] = sortedData;
+        
+        // Ridisegna la tabella
+        displayTable(tableId, sortedData, tableId.replace('-table', '-pagination'));
+    }
     
+    // Funzione per configurare header ordinabili solo se necessario
+    function setupSortableHeaders() {
+        // Questa funzione verrà chiamata dopo che i risultati sono stati caricati
+        // per determinare se attivare l'ordinamento
+    }
+
+    // Funzione per attivare/disattivare ordinamento basato sul numero di elementi
+    function updateSortableHeaders() {
+        const tables = ['detail-table', 'summary-table', 'leftover-table'];
+        
+        tables.forEach(tableId => {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            
+            const dataKey = tableId.replace('-table', '');
+            const dataCount = window.currentResults ? (window.currentResults[dataKey] || []).length : 0;
+            
+            // Se ci sono più di 5 elementi, attiva l'ordinamento
+            if (dataCount > 5) {
+                table.querySelectorAll('th').forEach(th => {
+                    th.classList.add('sortable-header');
+                    if (!th.getAttribute('data-sort')) {
+                        // Aggiungi data-sort se non presente
+                        const text = th.textContent.trim();
+                        const sortMap = {
+                            'Disciplina Unimarconi': 'disciplina_unimarconi',
+                            'CFU Richiesti': 'cfu_richiesti',
+                            'Disciplina Esterna': 'disciplina_esterna',
+                            'CFU Assegnati': 'cfu_assegnati',
+                            'Priorità': 'priorita',
+                            'Stato': 'stato',
+                            'Note': 'note',
+                            'CFU Riconosciuti': 'cfu_riconosciuti',
+                            'Integrativi Richiesti': 'integrativi_richiesti',
+                            'CFU Residui': 'cfu_residui',
+                            'Motivazione': 'motivazione'
+                        };
+                        th.setAttribute('data-sort', sortMap[text] || '');
+                    }
+                });
+                
+                // Aggiungi event listeners se non già presenti
+                table.querySelectorAll('th.sortable-header').forEach(header => {
+                    if (!header.hasAttribute('data-sort-listener')) {
+                        header.setAttribute('data-sort-listener', 'true');
+                        header.addEventListener('click', function() {
+                            const column = this.getAttribute('data-sort');
+                            handleHeaderClick(tableId, column);
+                        });
+                    }
+                });
+            } else {
+                // Se 5 o meno elementi, disattiva l'ordinamento
+                table.querySelectorAll('th').forEach(th => {
+                    th.classList.remove('sortable-header', 'sort-asc', 'sort-desc');
+                    th.removeAttribute('data-sort-listener');
+                });
+            }
+        });
+    }
+
     // Mostra risultati
     function displayResults(results) {
         console.log('📊 Displaying results:', results);
         const container = document.getElementById('results-container');
         container.style.display = 'block';
         
-        // Ordina i risultati: riconosciuti e parziali prima
+        // Salva i risultati per l'ordinamento
+        window.currentResults = results;
+        
+        // Aggiorna configurazione header ordinabili
+        updateSortableHeaders();
+        
+        // Ordina i risultati: Dettaglio per priorità, altre per status
         if (results.detail) {
-            results.detail = sortResultsByStatus(results.detail);
+            results.detail = sortResultsByStatus(results.detail, 'detail');
         }
         if (results.summary) {
-            results.summary = sortResultsByStatus(results.summary);
+            results.summary = sortResultsByStatus(results.summary, 'summary');
         }
         
         displayTable('detail-table', results.detail, 'detail-pagination');
@@ -908,21 +1406,30 @@
         console.log('✅ Risultati mostrati senza refresh');
     }
     
-    // Ordina risultati per status (riconosciuti e parziali prima)
-    function sortResultsByStatus(data) {
+    // Ordina risultati per priorità (per tabella Dettaglio) o status (per altre tabelle)
+    function sortResultsByStatus(data, tableType = 'summary') {
         if (!data || !Array.isArray(data)) return data;
         
         return data.sort((a, b) => {
-            // Usa direttamente il campo 'stato' invece di getLastValue
-            const statusA = (a.stato && typeof a.stato === 'string') ? a.stato.toLowerCase() : '';
-            const statusB = (b.stato && typeof b.stato === 'string') ? b.stato.toLowerCase() : '';
-            
-            // Priorità: TOT > PARZIALE > NON
-            const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
-            const priorityA = priority[statusA] || 4;
-            const priorityB = priority[statusB] || 4;
-            
-            return priorityA - priorityB;
+            if (tableType === 'detail') {
+                // Per la tabella Dettaglio, ordina per priorità numerica
+                const prioritaA = parseInt(a.priorita) || 999;
+                const prioritaB = parseInt(b.priorita) || 999;
+                
+                // Ordina per priorità crescente (1, 2, 3, ...)
+                return prioritaA - prioritaB;
+            } else {
+                // Per le altre tabelle, mantieni l'ordinamento per status
+                const statusA = (a.stato && typeof a.stato === 'string') ? a.stato.toLowerCase() : '';
+                const statusB = (b.stato && typeof b.stato === 'string') ? b.stato.toLowerCase() : '';
+                
+                // Priorità: TOT > PARZIALE > NON
+                const priority = { 'tot': 1, 'parziale': 2, 'non': 3 };
+                const priorityA = priority[statusA] || 4;
+                const priorityB = priority[statusB] || 4;
+                
+                return priorityA - priorityB;
+            }
         });
     }
     
@@ -969,24 +1476,39 @@
                 
                 // Mapping corretto per ogni tabella
                 if (tableId === 'detail-table') {
-                    // Tabella Dettaglio: Disciplina Unimarconi, CFU Richiesti, Disciplina Esterna, CFU Assegnati, Priorità, Note, Stato
+                    // Tabella Dettaglio: Disciplina Unimarconi, CFU Richiesti, Disciplina Esterna, CFU Assegnati, Priorità, Stato, Note
                     row.insertCell().textContent = item.disciplina_unimarconi || '';
                     row.insertCell().textContent = item.cfu_richiesti || '';
                     row.insertCell().textContent = item.disciplina_esterna || '';
                     row.insertCell().textContent = item.cfu_assegnati || '';
-                    row.insertCell().textContent = item.priorita || '';
-                    row.insertCell().textContent = item.note || '';
                     
-                    // Ultima colonna: Stato (se presente)
-                    const statusCell = row.insertCell();
+                    // Colonna Priorità con nota per priorità 999
+                    const prioritaCell = row.insertCell();
+                    const priorita = parseInt(item.priorita) || 0;
+                    if (priorita === 999) {
+                        prioritaCell.innerHTML = `${priorita} <span style="color: #E57552; font-size: 12px;" title="Priorità 999: Disciplina non riconosciuta o non disponibile">⚠️</span>`;
+                    } else {
+                        prioritaCell.textContent = priorita;
+                    }
+                    
+                    // Colonna Stato
+                    const statoCell = row.insertCell();
                     if (item.stato && ['tot', 'parziale', 'non'].includes(item.stato.toLowerCase())) {
                         const span = document.createElement('span');
                         span.textContent = item.stato.toUpperCase();
                         span.className = `stato-${item.stato.toLowerCase()}`;
-                        statusCell.appendChild(span);
+                        statoCell.appendChild(span);
                     } else {
-                        statusCell.textContent = item.stato || '';
+                        statoCell.textContent = item.stato || '';
                     }
+                    
+                    // Colonna Note con spiegazione per priorità 999
+                    const noteCell = row.insertCell();
+                    let noteText = item.note || '';
+                    if (priorita === 999 && !noteText) {
+                        noteText = 'Disciplina non riconosciuta o non disponibile per questo corso di laurea';
+                    }
+                    noteCell.textContent = noteText;
                 } else if (tableId === 'summary-table') {
                     // Tabella Riepilogo: Disciplina Unimarconi, CFU Richiesti, CFU Riconosciuti, Integrativi Richiesti, Stato
                     row.insertCell().textContent = item.disciplina_unimarconi || '';
@@ -1052,7 +1574,7 @@
     // Salva simulazione
     async function saveSimulation() {
         if (!currentResults) {
-            alert('Nessuna simulazione da salvare. Esegui prima una simulazione.');
+            showNoSimulationModal();
             return;
         }
         
@@ -1091,26 +1613,18 @@
                 window.location.reload();
             } else {
                 hideLoading();
-                alert('❌ Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
+                alert('Errore nel salvataggio: ' + (result.message || 'Errore sconosciuto'));
                 saveBtn.style.display = 'block';
             }
         } catch (error) {
             console.error('❌ Errore salvataggio:', error);
             hideLoading();
-            alert('❌ Errore nel salvataggio della simulazione: ' + error.message);
+            alert('Errore nel salvataggio della simulazione: ' + error.message);
             saveBtn.style.display = 'block';
         }
     }
     
     // Utility functions
-    function showError(elementId, message) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = message;
-            element.style.display = 'block';
-        }
-    }
-    
     function hideError(elementId) {
         const element = document.getElementById(elementId);
         if (element) {
@@ -1124,6 +1638,87 @@
     
     function hideLoading() {
         document.getElementById('loading-overlay').style.display = 'none';
+    }
+    
+    // Funzioni per il modale avviso disciplina
+    function showDisciplineWarningModal() {
+        document.getElementById('discipline-warning-modal').style.display = 'flex';
+    }
+    
+    function closeDisciplineWarningModal() {
+        document.getElementById('discipline-warning-modal').style.display = 'none';
+    }
+    
+    // Funzioni per il modale nessuna simulazione
+    function showNoSimulationModal() {
+        document.getElementById('no-simulation-modal').style.display = 'flex';
+    }
+    
+    function closeNoSimulationModal() {
+        document.getElementById('no-simulation-modal').style.display = 'none';
+    }
+    
+    
+    // Eventi per nascondere errori quando l'utente interagisce con i campi
+    document.addEventListener('DOMContentLoaded', function() {
+        // CDL select
+        const cdlSelect = document.getElementById('simulator-cdl');
+        if (cdlSelect) {
+            cdlSelect.addEventListener('change', function() {
+                clearError('cdl-error');
+            });
+        }
+        
+        // Aggiungi eventi per i campi delle discipline (verranno aggiunti dinamicamente)
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('ssd-select')) {
+                const index = Array.from(document.querySelectorAll('.ssd-select')).indexOf(e.target) + 1;
+                clearError(`ssd_${index}_error`);
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.name && e.target.name.startsWith('nome_')) {
+                const index = e.target.name.split('_')[1];
+                clearError(`nome_${index}_error`);
+            }
+            if (e.target.name && e.target.name.startsWith('cfu_')) {
+                const index = e.target.name.split('_')[1];
+                clearError(`cfu_${index}_error`);
+            }
+        });
+    });
+    
+    // Pulisci errore specifico
+    function clearError(errorId) {
+        const errorElement = document.getElementById(errorId);
+        if (errorElement) {
+            errorElement.remove();
+        }
+        
+        // Rimuovi classe di errore dal campo
+        const fieldName = errorId.replace('_error', '');
+        let targetField = null;
+        
+        if (fieldName === 'cdl') {
+            targetField = document.getElementById('simulator-cdl');
+        } else if (fieldName.startsWith('ssd_')) {
+            const index = fieldName.split('_')[1];
+            const row = document.querySelectorAll('.discipline-row')[index - 1];
+            if (row) targetField = row.querySelector('.ssd-select');
+        } else if (fieldName.startsWith('nome_')) {
+            const index = fieldName.split('_')[1];
+            const row = document.querySelectorAll('.discipline-row')[index - 1];
+            if (row) targetField = row.querySelector('input[name^="nome_"]');
+        } else if (fieldName.startsWith('cfu_')) {
+            const index = fieldName.split('_')[1];
+            const row = document.querySelectorAll('.discipline-row')[index - 1];
+            if (row) targetField = row.querySelector('input[name^="cfu_"]');
+        }
+        
+        if (targetField) {
+            targetField.classList.remove('field-error');
+        }
     }
 </script>
 {% endblock %}

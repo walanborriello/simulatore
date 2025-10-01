@@ -54,7 +54,7 @@ class SimulationController extends AbstractController
             ->getQuery()
             ->getArrayResult();
         
-        // Carica le SSD per il CDL della simulazione
+        // Carica le SSD per il CDL della simulazione (per compatibilità)
         $ssdData = [];
         if ($simulation->getCdl()) {
             $riconoscibiliRepo = $em->getRepository(\App\Entity\ZcfuRiconoscibile::class);
@@ -63,6 +63,28 @@ class SimulationController extends AbstractController
                 ->setParameter('cdl', $simulation->getCdl())
                 ->getQuery()
                 ->getArrayResult();
+        }
+        
+        // Pre-carica tutti i dati SSD per tutti i CDL per evitare chiamate AJAX lente
+        $riconoscibiliRepo = $em->getRepository(\App\Entity\ZcfuRiconoscibile::class);
+        $riconoscibiliData = $riconoscibiliRepo->createQueryBuilder('r')
+            ->select('r.cdl, r.riconoscibile')
+            ->orderBy('r.cdl', 'ASC')
+            ->addOrderBy('r.riconoscibile', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        // Organizza i dati per CDL
+        $allSsdData = [];
+        foreach ($riconoscibiliData as $ric) {
+            $cdl = $ric['cdl'];
+            if (!isset($allSsdData[$cdl])) {
+                $allSsdData[$cdl] = [];
+            }
+            $allSsdData[$cdl][] = [
+                'id' => $ric['riconoscibile'],
+                'text' => $ric['riconoscibile']
+            ];
         }
         
         // Debug: log dei dati della simulazione
@@ -78,6 +100,7 @@ class SimulationController extends AbstractController
             'simulation' => $simulation,
             'cdlOptions' => $cdlData,
             'ssdOptions' => $ssdData,
+            'allSsdData' => $allSsdData, // Tutti i dati SSD organizzati per CDL
             'successMessage' => $sessionSuccessMessage
         ]);
     }
